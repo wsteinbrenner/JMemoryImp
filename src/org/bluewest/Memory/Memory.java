@@ -63,14 +63,28 @@ public class Memory {
 	
 
 	public static void main(String[] args) {
-		System.out.println("A simple Memory Game");
-		System.out.println("--------------------");
-		System.out.println("");
-		
+		drawMainWelcome();
 		final Memory game = new Memory();
 		game.gamePlay(10);
 	}
 	
+	// Static View
+	
+	private static void drawStatic(String text) {
+		System.out.print(text);
+	}
+	
+	private static void drawMainWelcome() {
+		drawStatic(LINE_END);
+		drawStatic("--------------------"); drawStatic(LINE_END);
+		drawStatic("A simple Memory Game"); drawStatic(LINE_END);
+		drawStatic("--------------------"); drawStatic(LINE_END);
+		drawStatic(LINE_END);
+	}
+	
+	
+	// Controller
+
 	public void gamePlay(int boardWith) {
 		
 		boolean run = true;
@@ -260,7 +274,7 @@ public class Memory {
 	private void draw(String text) {
 		System.out.print(text);
 	}
-		
+	
 	private String drawReadString(String text) {
 		drawNotEmpty(text);
 		return input.next();		
