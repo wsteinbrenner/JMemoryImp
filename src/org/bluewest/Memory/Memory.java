@@ -7,50 +7,59 @@ import java.util.Scanner;
 
 public class Memory {
 	
+	//Options
+	
+	//- Game
 	private final static int CARD_SIBLINGS = 2;
-	//private final static int HEIGHT_FACTOR = 2; // replaced by cardMatchAmount
-	private final static String COL_FILLER = " ";
-	private final static String ROW_SIGN = "-";
-	private final static String COL_SIGN = "|";
-	private final static char SHADOW_SIGN = '*';
-	private final static String LINE_END = System.lineSeparator();
-	private final static int SIGN_FIRST = 65;
-	private final static int SIGN_LAST = 90;
-	private final static int SIGN_RANGE = SIGN_LAST - SIGN_FIRST;
 	private final static boolean SHOW_CARDS = true;
 	
-	//Commands
+	//-- Commands
 	private final static String CS_QUIT = "q";
 	private final static String C_QUIT = "quit";
 	private final static String CS_EXIT = "e";
 	private final static String C_EXIT = "exit";
-	
-	//Errors
+		
+	//-- Errors
 	private static enum ERR_CODE {
 		OK,
 		ERR_ROW_NOT_FOUND,
 		ERR_COL_NOT_FOUND
 	}
 	
-	//Game
-	private int cardMatchAmount = 2;
+	//- View
+	private final static String COL_FILLER = " ";
+	private final static String ROW_SIGN = "-";
+	private final static String COL_SIGN = "|";
+	private final static char SHADOW_SIGN = '*';
+	private final static String LINE_END = System.lineSeparator();
 	
-	//Board
-	private int boardColWith = 0;
-	private int boardCardWith = 0;
-	private int boardRowWith = 0;
-	private int maxRowElements = 0;
-	private int boardElements = 0;
-	private String boardShadowValue = "";
-	private String[][] board = null;
-	private boolean[][] shadowBoard = null;
+	//-- Cards 
+	private final static int SIGN_FIRST = 65;
+	private final static int SIGN_LAST = 90;
+	private final static int SIGN_RANGE = SIGN_LAST - SIGN_FIRST;
 	
-	//Game
+	
+	//Models
+	
+	//- Game
+	private int gameCardSiblings = CARD_SIBLINGS;
+	private String[][] gameBoard = null;
+	private boolean[][] gameShadowBoard = null;
+	
+	//-- Player
 	private String[] playerNames = new String[2];
 	private int[] playerPoints = new int[2];
 	
-	//View
+	//-- Board
+	private int boardColWith = 0;
+	private int boardViewRowWith = 0;
+	private int boardMaxRowElements = 0;
+	private int boardMaxElements = 0;
+	
+	//- View
 	private final Scanner input = new Scanner(System.in);
+	private int boardCardValueWith = 0;
+	private String boardViewCardShadowValue = "";
 	
 
 	public static void main(String[] args) {
@@ -59,36 +68,10 @@ public class Memory {
 		System.out.println("");
 		
 		final Memory game = new Memory();
-		game.play(10);
+		game.gamePlay(10);
 	}
 	
-	private void drawGameIntro() {
-		draw(LINE_END);
-		draw(LINE_END);
-		draw("Lets play !!");
-		draw(LINE_END);
-	}
-	
-	private void drawGameStats() {
-		drawBoardLine();
-		draw(LINE_END);
-		drawPlayers();
-		drawBoardLine();
-		draw(LINE_END);
-		drawBoard(this.board, this.shadowBoard);
-		draw(LINE_END);
-		draw("Type (q)uit to quit game");
-		draw(LINE_END);
-		draw(LINE_END);
-	}
-	
-	private void drawPlayerInCharge(int player) {
-		drawPlayerIndex(player);
-		draw(playerNames[player] + "'s guess: ");
-		draw(LINE_END);	
-	}
-	
-	public void play(int boardWith) {
+	public void gamePlay(int boardWith) {
 		
 		boolean run = true;
 		
@@ -104,25 +87,25 @@ public class Memory {
 			drawGameStats();
 			drawPlayerInCharge(player);					
 			
-			final int[] row = new int[CARD_SIBLINGS];
-			final int[] col = new int[CARD_SIBLINGS];
+			final int[] row = new int[gameCardSiblings];
+			final int[] col = new int[gameCardSiblings];
 			String card = null;
 			boolean match = false;
 			
-			for(int cardIndex = 0; cardIndex < CARD_SIBLINGS; cardIndex++) {
+			for(int cardIndex = 0; cardIndex < gameCardSiblings; cardIndex++) {
 				
-				String input = readString("Row[" + cardIndex + "]: ");
+				String input = drawReadString("Row[" + cardIndex + "]: ");
 				
-				if(drawAskQuit(isQuit(input))) {
+				if(drawGameAskQuit(isQuit(input))) {
 					run = false;
 					return;
 				}
 				
 				row[cardIndex] = Integer.valueOf(input);
 				
-				input = readString("Col[" + cardIndex + "]: ");
+				input = drawReadString("Col[" + cardIndex + "]: ");
 
-				if(drawAskQuit(isQuit(input))) {
+				if(drawGameAskQuit(isQuit(input))) {
 					run = false;
 					return;
 				}
@@ -131,7 +114,7 @@ public class Memory {
 				
 				setShadowBoard(row[cardIndex], col[cardIndex], SHOW_CARDS);
 				
-				drawBoard(this.board, this.shadowBoard);
+				drawBoard(this.gameBoard, this.gameShadowBoard);
 				
 				draw(LINE_END);
 				
@@ -152,14 +135,14 @@ public class Memory {
 				match = false;
 			}else {
 				resetShadowBoard(row, col);
-				drawHint("Sorry, no match  (Enter to Continue)");
+				drawGameHint("Sorry, no match  (Enter to Continue)");
 			}
 			
 			if(player + 1 >= playerNames.length) {
 				player = 0;
 			}
 			
-			if(cardsLeft() > 0) {
+			if(gameCardsLeft() > 0) {
 				continue;
 			}
 			
@@ -175,47 +158,12 @@ public class Memory {
 			
 			draw(LINE_END);
 			
-			if(drawAskYesNo(true, "Do you want to play again? (y/n)")) {
+			if(drawGameAskYesNo(true, "Do you want to play again? (y/n)")) {
 				continue;
 			}
 			
 			run = false;
 		}
-	}
-	
-	private void setShadowBoard(int row, int col, boolean mask) {
-		shadowBoard[row][col] = mask;
-	}
-	
-	private void resetShadowBoard(int[] row, int[] col) {
-		
-		for(int i = 0; i < row.length; i++) {
-			setShadowBoard(row[i], col[i], !SHOW_CARDS);
-		}
-	}
-	
-	private int cardsLeft() {
-		return boardElements - cardsRevealed();
-	}
-	
-	private int cardsRevealed() {
-		
-		int sum = 0;
-		
-		for(int i = 0; i < playerPoints.length; i++) {
-			sum += playerPoints[i];
-		}
-		
-		return sum * cardMatchAmount;		
-	}
-	
-	private boolean stopCompare(String first, String second) {
-		
-		if(first == null || first.equals(second)) {
-			return false;
-		}
-		
-		return true;
 	}
 	
 	private void initGame(int boardWith) {
@@ -235,9 +183,9 @@ public class Memory {
 		
 		while(initPlayer) {
 			
-			final String input = readString("Player " + playerNumber + ": ");
+			final String input = drawReadString("Player " + playerNumber + ": ");
 			
-			if(drawAskYesNo(isExit(input), "Do you really want to exit? (y/n)")){
+			if(drawGameAskYesNo(isExit(input), "Do you really want to exit? (y/n)")){
 				initPlayer = false;
 				continue;
 			}
@@ -257,48 +205,24 @@ public class Memory {
 	
 	private void intBoards(int width){		
 		
-		this.board = new String[width][width * cardMatchAmount];
-		this.shadowBoard = new boolean[width][width * cardMatchAmount];
+		this.gameBoard = new String[width][width * gameCardSiblings];
+		this.gameShadowBoard = new boolean[width][width * gameCardSiblings];
 		
-		initBoardElements(board);
+		initBoardMaxElements(gameBoard);
 		
-		final String[] cards = shuffleCards(getCards(board));  
+		final String[] cards = shuffleCards(getCards(gameBoard));  
 		
-		for(int row = 0, card = 0; row < board.length; row ++) {
+		for(int row = 0, card = 0; row < gameBoard.length; row ++) {
 			
-			for(int col = 0; col < board[row].length; col++, card++) {
-				board[row][col] = cards[card];
-				shadowBoard[row][col] = !SHOW_CARDS;
+			for(int col = 0; col < gameBoard[row].length; col++, card++) {
+				gameBoard[row][col] = cards[card];
+				gameShadowBoard[row][col] = !SHOW_CARDS;
 			}
 		}
 	}
 	
 	//View
 		
-	private String readString(String text) {
-		
-		drawNotEmpty(text);
-		return input.next();		
-	}
-	
-	private void drawHint(String hint) {
-		
-		drawNotEmpty(hint);
-		
-		try {
-			System.in.read();
-		} catch (IOException e) {
-			draw("Error: " + e.getMessage());
-			//e.printStackTrace();
-		}
-	}
-	
-	private void drawNotEmpty(String text) {
-		if (text != null && !text.isEmpty()) {
-			draw(text);
-		}
-	}
-	
 	private boolean isQuit(String input) {
 		
 		if (C_QUIT.equalsIgnoreCase(input) || CS_QUIT.equalsIgnoreCase(input)) {
@@ -321,29 +245,105 @@ public class Memory {
 		return "y".equalsIgnoreCase(input);
 	}
 	
-	private boolean drawAskQuit(boolean isQuit) {		
-		return drawAskYesNo(isQuit, "Do you really want to quit? (y/n)");		
-	}
+	//View
 	
-	private boolean drawAskYesNo(boolean isCommand, String question) {
+	private void initBoardViewRowWith(int rowElements, int colWith) {
+		this.boardViewRowWith = (boardMaxRowElements * ROW_SIGN.length() * (boardColWith + COL_SIGN.length())) + COL_SIGN.length();
+	}
+
+	private void initBoardViewCardShadowValue(int colWith) {
+		for(int i = 0; i< colWith; i++) {
+			this.boardViewCardShadowValue += String.valueOf(SHADOW_SIGN);
+		}
+	}
+
+	private void draw(String text) {
+		System.out.print(text);
+	}
+		
+	private String drawReadString(String text) {
+		drawNotEmpty(text);
+		return input.next();		
+	}
+
+	private void drawNotEmpty(String text) {
+		if (text != null && !text.isEmpty()) {
+			draw(text);
+		}
+	}
+
+	private void drawGameIntro() {
+		draw(LINE_END);
+		draw(LINE_END);
+		draw("Lets play !!");
+		draw(LINE_END);
+	}
+
+	private void drawGameStats() {
+		drawBoardLine();
+		draw(LINE_END);
+		drawPlayers();
+		drawBoardLine();
+		draw(LINE_END);
+		drawBoard(this.gameBoard, this.gameShadowBoard);
+		draw(LINE_END);
+		draw("Type (q)uit to quit game");
+		draw(LINE_END);
+		draw(LINE_END);
+	}
+
+	private void drawGameHint(String hint) {
+		
+		drawNotEmpty(hint);
+		
+		try {
+			System.in.read();
+		} catch (IOException e) {
+			draw("Error: " + e.getMessage());
+			//e.printStackTrace();
+		}
+	}
+
+	private boolean drawGameAskQuit(boolean isQuit) {		
+		return drawGameAskYesNo(isQuit, "Do you really want to quit? (y/n)");		
+	}
+
+	private boolean drawGameAskYesNo(boolean isCommand, String question) {
 		
 		if(!isCommand) {
 			return false;
 		}
 		
-		return isYes(readString(question));		
+		return isYes(drawReadString(question));		
 	}
-	
-	private void draw(String text) {
-		System.out.print(text);
+
+	private void drawBoardHeader() {		
+		for(int i = 0; i < this.boardMaxRowElements; i++) {
+			drawBoardCol(String.valueOf(i), true);
+		}
+		
+		draw(COL_SIGN);
 	}
-	
+
+	private void drawBoardLine() {
+		for(int i = 0; i < this.boardViewRowWith; i++) {
+			draw(ROW_SIGN);
+		}
+	}
+
 	private void drawBoard(final String[][] board, final boolean[][] shadowBoard) {
 		drawBoardHeader();
 		draw(LINE_END);
 		drawBoardRows(board, shadowBoard);
 	}
 	
+	private void drawBoardRow(final String[] cols, final boolean[] shadowCols) {
+		drawBoardLine();
+		draw(LINE_END);
+		drawBoardCols(cols, shadowCols);
+		return;
+	}
+
 	private void drawBoardRows(final String[][] board, final boolean[][] shadowBoard) {
 		
 		int rowIndex = 0;
@@ -357,29 +357,15 @@ public class Memory {
 		}
 		
 		drawBoardLine();
-	}	
-	
-	private void drawBoardRow(final String[] cols, final boolean[] shadowCols) {
-		drawBoardLine();
-		draw(LINE_END);
-		drawBoardCols(cols, shadowCols);
-		return;
 	}
-	
-	private void drawBoardLine() {
-		for(int i = 0; i < this.boardRowWith; i++) {
-			draw(ROW_SIGN);
-		}
-	}
-	
-	private void drawBoardHeader() {		
-		for(int i = 0; i < this.maxRowElements; i++) {
-			drawBoardCol(String.valueOf(i), true);
-		}
-		
+
+	private void drawBoardCol(String colValue, boolean unmask) {
 		draw(COL_SIGN);
+		draw(COL_FILLER);
+		drawCardValue(unmask ? colValue : boardViewCardShadowValue);
+		draw(COL_FILLER);
 	}
-	
+
 	private void drawBoardCols(String[] cols, boolean[] shadowCols) {
 		
 		for(int i = 0; i < cols.length; i++) {
@@ -388,21 +374,14 @@ public class Memory {
 		
 		return;
 	}
-	
-	private void drawBoardCol(String colValue, boolean unmask) {
-		draw(COL_SIGN);
-		draw(COL_FILLER);
-		drawCardValue(unmask ? colValue : boardShadowValue);
-		draw(COL_FILLER);
-	}
-	
+
 	private void drawCardValue(String colValue) {
 		
 		String cardValue = "";
 		
-		for(int i = 0; i < this.boardCardWith; i++) {
+		for(int i = 0; i < this.boardCardValueWith; i++) {
 			
-			if( this.boardCardWith <= i + colValue.length()) {
+			if( this.boardCardValueWith <= i + colValue.length()) {
 				break;
 			}
 			
@@ -413,8 +392,7 @@ public class Memory {
 		draw(colValue);
 	}
 	
-	private void drawCards(String[] cards) {
-		
+	private void drawCards(String[] cards) {		
 		for(String card : cards) {
 			draw(card);
 			draw(COL_SIGN);
@@ -440,7 +418,15 @@ public class Memory {
 		draw("[Player " + index + "] ");
 	}
 	
-	private void initBoardColWith( final String[][] board) {
+	private void drawPlayerInCharge(int player) {
+		drawPlayerIndex(player);
+		draw(playerNames[player] + "'s guess: ");
+		draw(LINE_END);	
+	}
+	
+	// Controller
+
+	private void gameInitBoardCardValueWith( final String[][] board) {
 		
 		int maxColWith = 0;
 		
@@ -458,15 +444,11 @@ public class Memory {
 			}
 		}
 		
-		this.boardCardWith = maxColWith;
-		this.boardColWith = maxColWith + (COL_FILLER.length() *2);
-		initShadowValue(maxColWith);
+		this.boardCardValueWith = maxColWith;		
 	}
 	
-	private void initShadowValue(int colWith) {
-		for(int i = 0; i< colWith; i++) {
-			this.boardShadowValue += String.valueOf(SHADOW_SIGN);
-		}
+	private void gameInitBoardColWith(int cardValueWith) {
+		this.boardColWith = cardValueWith + (COL_FILLER.length() *2);
 	}
 	
 	private void initBoardMaxRowElements( final String[][] board) {
@@ -482,10 +464,10 @@ public class Memory {
 			}			
 		}
 		
-		this.maxRowElements = maxRowElements;
+		this.boardMaxRowElements = maxRowElements;
 	}
 	
-	private void initBoardElements(String[][] board) {
+	private void initBoardMaxElements(String[][] board) {
 		
 		int boardElements = 0;
 		
@@ -493,37 +475,78 @@ public class Memory {
 			boardElements += row.length;
 		}
 		
-		this.boardElements = boardElements;
+		this.boardMaxElements = boardElements;
 	}
 	
-	private void initBoardRowWith( final String[][] board) {
-		initBoardColWith(board);
+	private void initBoardDimensions( final String[][] board) {
+		gameInitBoardCardValueWith(board);
 		initBoardMaxRowElements(board);
-		this.boardRowWith = (maxRowElements * ROW_SIGN.length() * (boardColWith + COL_SIGN.length())) + COL_SIGN.length();		
+		gameInitBoardColWith(this.boardCardValueWith);		
 	}
-			
+	
+	private void initBoardView() {
+		initBoardViewCardShadowValue(this.boardCardValueWith);
+		initBoardViewRowWith(boardMaxRowElements, boardColWith);
+	}
+	
 	private void initBoard(int boardWith) {
 		intBoards(boardWith);		
-		initBoardRowWith(board);
+		initBoardDimensions(this.gameBoard);
+		initBoardView();
 	}
 	
 	//Controller
 	
 	private ERR_CODE isInBoardRange(final int row, final int col) {
 		
-		if(board.length >= row) {
+		if(gameBoard.length >= row) {
 			return ERR_CODE.ERR_ROW_NOT_FOUND;
 		}
 		
-		if(board[row].length >= col) {
+		if(gameBoard[row].length >= col) {
 			return ERR_CODE.ERR_COL_NOT_FOUND;
 		}	
 		
 		return ERR_CODE.OK;
 	}
 	
+	private void setShadowBoard(int row, int col, boolean mask) {
+		gameShadowBoard[row][col] = mask;
+	}
+
+	private void resetShadowBoard(int[] row, int[] col) {
+		
+		for(int i = 0; i < row.length; i++) {
+			setShadowBoard(row[i], col[i], !SHOW_CARDS);
+		}
+	}
+
+	private int getGameCardsRevealed() {
+		
+		int sum = 0;
+		
+		for(int i = 0; i < playerPoints.length; i++) {
+			sum += playerPoints[i];
+		}
+		
+		return sum * gameCardSiblings;		
+	}
+
+	private boolean stopCompare(String first, String second) {
+		
+		if(first == null || first.equals(second)) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	private int gameCardsLeft() {
+		return boardMaxElements - getGameCardsRevealed();
+	}
+
 	private String[] getCards(String[][] board) {	
-		final String[] cards = new String[boardElements];
+		final String[] cards = new String[boardMaxElements];
 		final int[] roundIndex = new int[(int) (cards.length / SIGN_RANGE)];
 		Arrays.fill(roundIndex, -1);
 		
@@ -599,14 +622,14 @@ public class Memory {
 		final ERR_CODE check = isInBoardRange(row, col);
 		
 		if(ERR_CODE.OK.equals(check)) {
-			board[row][col] = value;
+			gameBoard[row][col] = value;
 		}			
 		
 		return check;
 	}
 	
 	private String getCol(final int row, final int col) {
-		return board[row][col];
+		return gameBoard[row][col];
 	}
 	
 	private int[] getPlayerHighPoint() {
