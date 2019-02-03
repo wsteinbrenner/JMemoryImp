@@ -63,7 +63,6 @@ public class Memory {
 	
 
 	public static void main(String[] args) {
-		drawMainWelcome();
 		final Memory game = new Memory();
 		game.gamePlay(10);
 	}
@@ -74,18 +73,22 @@ public class Memory {
 		System.out.print(text);
 	}
 	
-	private static void drawMainWelcome() {
+	
+	
+	
+	private void drawMainWelcome() {
 		drawStatic(LINE_END);
 		drawStatic("--------------------"); drawStatic(LINE_END);
 		drawStatic("A simple Memory Game"); drawStatic(LINE_END);
 		drawStatic("--------------------"); drawStatic(LINE_END);
 		drawStatic(LINE_END);
 	}
-	
-	
+
 	// Controller
 
 	public void gamePlay(int boardWith) {
+		
+		drawMainWelcome();
 		
 		boolean run = true;
 		
@@ -233,31 +236,7 @@ public class Memory {
 				gameShadowBoard[row][col] = !SHOW_CARDS;
 			}
 		}
-	}
-	
-	//View
-		
-	private boolean isQuit(String input) {
-		
-		if (C_QUIT.equalsIgnoreCase(input) || CS_QUIT.equalsIgnoreCase(input)) {
-			return true;
-		}
-		
-		return false;
-	}
-	
-	private boolean isExit(String input) {
-		
-		if (C_EXIT.equalsIgnoreCase(input) || CS_EXIT.equalsIgnoreCase(input)) {
-			return true;
-		}
-		
-		return false;
-	}
-	
-	private boolean isYes(String input) {
-		return "y".equalsIgnoreCase(input);
-	}
+	}	
 	
 	//View
 	
@@ -436,6 +415,30 @@ public class Memory {
 		drawPlayerIndex(player);
 		draw(playerNames[player] + "'s guess: ");
 		draw(LINE_END);	
+	}
+
+	//View
+		
+	private boolean isQuit(String input) {
+		
+		if (C_QUIT.equalsIgnoreCase(input) || CS_QUIT.equalsIgnoreCase(input)) {
+			return true;
+		}
+		
+		return false;
+	}
+
+	private boolean isExit(String input) {
+		
+		if (C_EXIT.equalsIgnoreCase(input) || CS_EXIT.equalsIgnoreCase(input)) {
+			return true;
+		}
+		
+		return false;
+	}
+
+	private boolean isYes(String input) {
+		return "y".equalsIgnoreCase(input);
 	}
 	
 	// Controller
