@@ -11,6 +11,7 @@ public class Memory {
 	
 	//- Game
 	private final static int CARD_SIBLINGS = 2;
+	private final static int BOARD_ROWS = 10;
 	private final static boolean SHOW_CARDS = true;
 	
 	//-- Commands
@@ -52,36 +53,86 @@ public class Memory {
 	
 	//-- Board
 	private int boardColWith = 0;
-	private int boardViewRowWith = 0;
+	private int boardRows = BOARD_ROWS;
 	private int boardMaxRowElements = 0;
 	private int boardMaxElements = 0;
 	
 	//- View
 	private final Scanner input = new Scanner(System.in);
+	private int boardViewRowWith = 0;
 	private int boardCardValueWith = 0;
 	private String boardViewCardShadowValue = "";
 	
 
 	public static void main(String[] args) {
 		final Memory game = new Memory();
-		game.gamePlay(10);
+		game.gamePlay(BOARD_ROWS);
 	}
 	
 	// Static View
 	
 	private static void drawStatic(String text) {
 		System.out.print(text);
-	}
-	
-	
+	}	
 	
 	
 	private void drawMainWelcome() {
-		drawStatic(LINE_END);
-		drawStatic("--------------------"); drawStatic(LINE_END);
-		drawStatic("A simple Memory Game"); drawStatic(LINE_END);
-		drawStatic("--------------------"); drawStatic(LINE_END);
-		drawStatic(LINE_END);
+		draw(LINE_END);
+		draw("--------------------"); draw(LINE_END);
+		draw("A simple Memory Game"); draw(LINE_END);
+		draw("--------------------"); draw(LINE_END);
+		draw(LINE_END);
+	}
+	
+	private void drawMainConfigure() {
+		draw(LINE_END);
+		draw("Configure Game"); draw(LINE_END);
+		draw("--------------"); draw(LINE_END);
+		draw(LINE_END);
+		drawMainHelp();
+		
+	}
+	
+	private void drawMainHelp() {
+		draw("*Configure the amount of (r)ows the board shall have"); draw(LINE_END);
+		draw("*Configure the amount of (c)ard siblings"); draw(LINE_END);
+		
+	}
+	
+	private void drawAskConfiguration() {
+		
+		draw("Configure Game"); draw(LINE_END);
+		String input = drawReadString("Configure: ");
+		
+		boolean configure = true;
+		
+		switch (input) {
+		case "r":
+		case "rows":
+			setBoardRows(drawReadInt("Amount of rows:")); 
+			break;
+		case "c":
+		case "card":
+			setGameCardSiblings(drawReadInt("Amount of card siblings:")); 
+			break;
+		case "e":
+		case "exit":
+			configure = false; 
+			break;
+
+		default:
+			break;
+		}
+		
+		
+	}
+	
+	public void setBoardRows(int amount) {
+		boardRows = amount;
+	}
+	
+	public void setGameCardSiblings(int amount) {
+		this.gameCardSiblings = amount;
 	}
 
 	// Controller
@@ -257,6 +308,11 @@ public class Memory {
 	private String drawReadString(String text) {
 		drawNotEmpty(text);
 		return input.next();		
+	}
+	
+	private int drawReadInt(String text) {
+		drawNotEmpty(text);
+		return input.nextInt();		
 	}
 
 	private void drawNotEmpty(String text) {
