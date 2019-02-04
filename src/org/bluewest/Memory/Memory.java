@@ -19,12 +19,23 @@ public class Memory {
 	private final static String C_QUIT = "quit";
 	private final static String CS_EXIT = "e";
 	private final static String C_EXIT = "exit";
+	private final static String CS_PRINT = "p";
+	private final static String C_PRINT = "print";
+	private final static String CS_HELP = "h";
+	private final static String C_HELP = "help";
 		
 	//-- Errors
-	private static enum ERR_CODE {
+	private static enum CONTROL_CODE {
 		OK,
+		EXIT,
+		ERR_VALUE_TOO_SMALL,
 		ERR_ROW_NOT_FOUND,
 		ERR_COL_NOT_FOUND
+	}
+	
+	private static enum VIEW_CONTROL_CODE {
+		OK,
+		ERR_INPUT_NOT_INT
 	}
 	
 	//- View
@@ -46,10 +57,13 @@ public class Memory {
 	private int gameCardSiblings = CARD_SIBLINGS;
 	private String[][] gameBoard = null;
 	private boolean[][] gameShadowBoard = null;
+	private CONTROL_CODE gameControlCode = CONTROL_CODE.OK;
 	
 	//-- Player
-	private String[] playerNames = new String[2];
-	private int[] playerPoints = new int[2];
+	private String[] playerNames = new String[0];
+	private int[] playerPoints = new int[0];
+	private int[] playerGuessRows = new int[0];
+	private int[] playerGuessCols = new int[0];
 	
 	//-- Board
 	private int boardColWith = 0;
@@ -66,7 +80,8 @@ public class Memory {
 
 	public static void main(String[] args) {
 		final Memory game = new Memory();
-		game.gamePlay(BOARD_ROWS);
+		game.gameInitWithView();
+		game.gamePlay();
 	}
 	
 	// Static View
@@ -89,66 +104,141 @@ public class Memory {
 		draw("Configure Game"); draw(LINE_END);
 		draw("--------------"); draw(LINE_END);
 		draw(LINE_END);
-		drawMainHelp();
+		drawMainConfigureHelp();
 		
 	}
 	
-	private void drawMainHelp() {
-		draw("*Configure the amount of (r)ows the board shall have"); draw(LINE_END);
-		draw("*Configure the amount of (c)ard siblings"); draw(LINE_END);
-		
+	private void drawMainConfigureHelp() {
+		draw("* Configure the amount of (r)ows the board shall have"); draw(LINE_END);
+		draw("* Configure the amount of (c)ard siblings"); draw(LINE_END);
+		draw("* (h)elp"); draw(LINE_END);
+		draw("* (p)rint"); draw(LINE_END);
+		draw("* (e)xit"); draw(LINE_END);
 	}
 	
-	private void drawAskConfiguration() {
+	private void drawMainControlMessage(CONTROL_CODE code, String text) {
 		
-		draw("Configure Game"); draw(LINE_END);
-		String input = drawReadString("Configure: ");
-		
-		boolean configure = true;
-		
-		switch (input) {
-		case "r":
-		case "rows":
-			setBoardRows(drawReadInt("Amount of rows:")); 
+		switch (code) {
+		case OK:
+			draw("O.K. "); draw(LINE_END);
 			break;
-		case "c":
-		case "card":
-			setGameCardSiblings(drawReadInt("Amount of card siblings:")); 
+		case EXIT:
+			draw("User requestet exit. "); draw(LINE_END);
 			break;
-		case "e":
-		case "exit":
-			configure = false; 
+		case ERR_VALUE_TOO_SMALL:
+			draw("Value too small. ");drawNotEmpty(text); draw(LINE_END);
+			break;
+		case ERR_COL_NOT_FOUND:
+			draw("Column not in range. ");drawNotEmpty(text); draw(LINE_END);
+			break;
+		case ERR_ROW_NOT_FOUND:
+			draw("Row not in range ");drawNotEmpty(text); draw(LINE_END);
 			break;
 
 		default:
-			break;
+			draw("Err: Control Code not found: " + code); draw(LINE_END);
 		}
 		
 		
 	}
 	
-	public void setBoardRows(int amount) {
-		boardRows = amount;
+	private void drawMainAskConfiguration() {
+		
+		draw("Configure Game"); draw(LINE_END);
+				
+		boolean configure = true;
+		CONTROL_CODE code = CONTROL_CODE.OK;
+		String message = "";
+		
+		while(configure) {
+			
+			final String input = drawReadString("Configure (r)ow, (card) or (h)elp, (p)rint, (e)xit: ");
+
+			switch (input) {
+			case "r":
+			case "rows":
+				code = setBoardRows(drawReadInt("Amount of rows (Default: " + BOARD_ROWS + "): "));
+				message = "Row value has to be greater 0";
+				break;
+			case "c":
+			case "card":
+				code = setGameCardSiblings(drawReadInt("Amount of card siblings (Default: " + CARD_SIBLINGS + "): "));
+				message = "Sibling value has to be greater than " + (CARD_SIBLINGS - 1) ;
+				break;
+			case CS_EXIT:
+			case C_EXIT:
+				code = CONTROL_CODE.EXIT;
+				message = "Exit configuration.";
+				configure = false; 
+				break;
+			case CS_PRINT:
+			case C_PRINT:
+				drawMainPrintConfiguration();
+				code = CONTROL_CODE.OK;
+				break;
+			case CS_HELP:
+			case C_HELP:
+				drawMainConfigureHelp();
+				code = CONTROL_CODE.OK;
+				break;
+			default:
+				draw("Unknown Command: " + input);draw(LINE_END);
+				break;
+			}
+			
+			if(CONTROL_CODE.OK != code) {
+				drawMainControlMessage(code, message);
+			}
+			
+			message = "";			
+		}
+		
+		
 	}
 	
-	public void setGameCardSiblings(int amount) {
+	public void drawMainPrintConfiguration(){
+		draw("Amount Board Rows:" + boardRows); draw(LINE_END);
+		draw("Amount Matchin Siblings:" + gameCardSiblings); draw(LINE_END);
+	}
+	
+	
+	public CONTROL_CODE setBoardRows(int amount) {
+		
+		if(amount < 1) {
+			return CONTROL_CODE.ERR_VALUE_TOO_SMALL;
+		}
+		
+		boardRows = amount;
+		
+		return CONTROL_CODE.OK;
+	}
+	
+	public CONTROL_CODE setGameCardSiblings(int amount) {
+
+		if(amount < CARD_SIBLINGS) {
+			return CONTROL_CODE.ERR_VALUE_TOO_SMALL;
+		}
+		
 		this.gameCardSiblings = amount;
+		
+		return CONTROL_CODE.OK;
 	}
 
 	// Controller
 
-	public void gamePlay(int boardWith) {
-		
+	
+	public void gameInitWithView() {
 		drawMainWelcome();
-		
-		boolean run = true;
-		
-//		while(run) {
-//			
-//		}
-		
-		drawGameIntro();		
-		initGame(boardWith);
+		drawMainConfigure();
+		drawMainAskConfiguration();		
+		drawMainGameIntro();
+		drawMainAskPlayers();
+	}
+	
+	public void gamePlay() {
+				
+		initPlayers(this.playerNames);
+		initGame(this.boardRows);
 		
 		for (int player = 0; player < playerNames.length; player++) {			
 			
@@ -165,7 +255,6 @@ public class Memory {
 				String input = drawReadString("Row[" + cardIndex + "]: ");
 				
 				if(drawGameAskQuit(isQuit(input))) {
-					run = false;
 					return;
 				}
 				
@@ -174,7 +263,6 @@ public class Memory {
 				input = drawReadString("Col[" + cardIndex + "]: ");
 
 				if(drawGameAskQuit(isQuit(input))) {
-					run = false;
 					return;
 				}
 				
@@ -229,18 +317,15 @@ public class Memory {
 			if(drawGameAskYesNo(true, "Do you want to play again? (y/n)")) {
 				continue;
 			}
-			
-			run = false;
 		}
 	}
 	
 	private void initGame(int boardWith) {
-		initPlayer();
 		initBoard(boardWith);
 		
 	}
 	
-	private void initPlayer() {
+	private void drawMainAskPlayers() {
 		
 		draw("Set player names, (e)xit when finished:");
 		draw(LINE_END);
@@ -260,16 +345,17 @@ public class Memory {
 			
 			if(playerNumber >= playerNames.length) {
 				playerNames = Arrays.copyOf(playerNames, playerNames.length+1);
-				playerPoints = Arrays.copyOf(playerPoints, playerPoints.length+1);
-			}			
-			
-			playerNames[playerNumber] = input;
-			playerPoints[playerNumber] = 0;
+			}
 			playerNumber ++;
 		}
 	}
 	
 	//Model
+	
+	private void initPlayers(String[] playerNames) {
+		this.playerNames = playerNames;
+		playerPoints = new int[playerNames.length];
+	}
 	
 	private void intBoards(int width){		
 		
@@ -312,7 +398,12 @@ public class Memory {
 	
 	private int drawReadInt(String text) {
 		drawNotEmpty(text);
-		return input.nextInt();		
+		
+		while(!input.hasNextInt()) {
+			draw("Please type a number: ");
+		}
+		
+		return input.nextInt();
 	}
 
 	private void drawNotEmpty(String text) {
@@ -321,7 +412,7 @@ public class Memory {
 		}
 	}
 
-	private void drawGameIntro() {
+	private void drawMainGameIntro() {
 		draw(LINE_END);
 		draw(LINE_END);
 		draw("Lets play !!");
@@ -570,17 +661,17 @@ public class Memory {
 	
 	//Controller
 	
-	private ERR_CODE isInBoardRange(final int row, final int col) {
+	private CONTROL_CODE isInBoardRange(final int row, final int col) {
 		
 		if(gameBoard.length >= row) {
-			return ERR_CODE.ERR_ROW_NOT_FOUND;
+			return CONTROL_CODE.ERR_ROW_NOT_FOUND;
 		}
 		
 		if(gameBoard[row].length >= col) {
-			return ERR_CODE.ERR_COL_NOT_FOUND;
+			return CONTROL_CODE.ERR_COL_NOT_FOUND;
 		}	
 		
-		return ERR_CODE.OK;
+		return CONTROL_CODE.OK;
 	}
 	
 	private void setShadowBoard(int row, int col, boolean mask) {
@@ -690,11 +781,11 @@ public class Memory {
 		return cardSign;
 	}
 	
-	private ERR_CODE setCol(String value, final int row, final int col) {
+	private CONTROL_CODE setCol(String value, final int row, final int col) {
 		
-		final ERR_CODE check = isInBoardRange(row, col);
+		final CONTROL_CODE check = isInBoardRange(row, col);
 		
-		if(ERR_CODE.OK.equals(check)) {
+		if(CONTROL_CODE.OK.equals(check)) {
 			gameBoard[row][col] = value;
 		}			
 		
