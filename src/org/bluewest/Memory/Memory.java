@@ -210,7 +210,7 @@ public class Memory {
 				player = 0;
 			}
 			
-			if(gameCardsLeft() > 0) {
+			if(getGameCardsLeft() > 0) {
 				continue;
 			}
 			
@@ -278,7 +278,7 @@ public class Memory {
 		
 		initBoardMaxElements(gameBoard);
 		
-		final String[] cards = shuffleCards(getCards(gameBoard));  
+		final String[] cards = shuffleCards(getGameCardDeck(gameBoard));  
 		
 		for(int row = 0, card = 0; row < gameBoard.length; row ++) {
 			
@@ -614,11 +614,11 @@ public class Memory {
 		return true;
 	}
 
-	private int gameCardsLeft() {
+	private int getGameCardsLeft() {
 		return boardMaxElements - getGameCardsRevealed();
 	}
 
-	private String[] getCards(String[][] board) {	
+	private String[] getGameCardDeck(String[][] board) {	
 		final String[] cards = new String[boardMaxElements];
 		final int[] roundIndex = new int[(int) (cards.length / SIGN_RANGE)];
 		Arrays.fill(roundIndex, -1);
