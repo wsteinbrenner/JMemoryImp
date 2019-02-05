@@ -88,209 +88,11 @@ public class Memory {
 
 	public static void main(String[] args) {
 		final Memory game = new Memory();
-		game.gameInitWithView();
-		game.gamePlay();
-	}
-	
-	// Static View
-	
-	private static void drawStatic(String text) {
-		System.out.print(text);
+		game.viewGameInit();
+		game.viewGamePlay();
 	}	
 	
-	
-	private void drawMainWelcome() {
-		draw(LINE_END);
-		draw("--------------------"); draw(LINE_END);
-		draw("A simple Memory Game"); draw(LINE_END);
-		draw("--------------------"); draw(LINE_END);
-		draw(LINE_END);
-	}
-	
-	private void drawMainConfigure() {
-		draw(LINE_END);
-		draw("Configure Game"); draw(LINE_END);
-		draw("--------------"); draw(LINE_END);
-		draw(LINE_END);
-		drawMainConfigureHelp();
-		
-	}
-	
-	private void drawMainConfigureHelp() {
-		draw("* Configure the amount of (r)ows the board shall have"); draw(LINE_END);
-		draw("* Configure the amount of (c)ard siblings"); draw(LINE_END);
-		draw("* (h)elp"); draw(LINE_END);
-		draw("* (p)rint"); draw(LINE_END);
-		draw("* (e)xit"); draw(LINE_END);
-	}
-	
-	private void drawMainControlMessage(CONTROL_CODE code) {
-		drawMainControlMessage(code, "");
-	}
-	
-	private void drawMainControlMessage(CONTROL_CODE code, String text) {
-		
-		switch (code) {
-		case OK:
-			draw("O.K. "); draw(LINE_END);
-			break;
-		case EXIT:
-			draw("User requestet exit. "); draw(LINE_END);
-			break;
-		case ERR_VALUE_TOO_SMALL:
-			draw("Value too small. ");drawNotEmpty(text); draw(LINE_END);
-			break;
-		case ERR_COL_NOT_FOUND:
-			draw("Column not in range. ");drawNotEmpty(text); draw(LINE_END);
-			break;
-		case ERR_ROW_NOT_FOUND:
-			draw("Row not in range. ");drawNotEmpty(text); draw(LINE_END);
-			break;
-		case ERR_CARD_IS_REVEALED:
-			draw("The card has allready been revealed. ");drawNotEmpty(text); draw(LINE_END);
-			break;
-
-		default:
-			draw("Err: Control Code not found: " + code); draw(LINE_END);
-		}
-		
-		
-	}
-	
-	private void drawMainAskConfiguration() {
-		
-		draw("Configure Game"); draw(LINE_END);
-				
-		boolean configure = true;
-		CONTROL_CODE code = CONTROL_CODE.OK;
-		String message = "";
-		
-		while(configure) {
-			
-			final String input = drawReadString("Configure (r)ow, (card) or (h)elp, (p)rint, (e)xit: ");
-
-			switch (input) {
-			case "r":
-			case "rows":
-				code = setBoardRows(drawReadInt("Amount of rows (Default: " + BOARD_ROWS + "): "));
-				message = "Row value has to be greater 0";
-				break;
-			case "c":
-			case "card":
-				code = setGameCardSiblings(drawReadInt("Amount of card siblings (Default: " + CARD_SIBLINGS + "): "));
-				message = "Sibling value has to be greater than " + (CARD_SIBLINGS - 1) ;
-				break;
-			case CS_EXIT:
-			case C_EXIT:
-				code = CONTROL_CODE.EXIT;
-				message = "Exit configuration.";
-				configure = false; 
-				break;
-			case CS_PRINT:
-			case C_PRINT:
-				drawMainPrintConfiguration();
-				code = CONTROL_CODE.OK;
-				break;
-			case CS_HELP:
-			case C_HELP:
-				drawMainConfigureHelp();
-				code = CONTROL_CODE.OK;
-				break;
-			default:
-				draw("Unknown Command: " + input);draw(LINE_END);
-				break;
-			}
-			
-			if(CONTROL_CODE.OK != code) {
-				drawMainControlMessage(code, message);
-			}
-			
-			message = "";			
-		}
-		
-		
-	}
-	
-	public void drawMainPrintConfiguration(){
-		draw("Amount Board Rows:" + boardRows); draw(LINE_END);
-		draw("Amount Matchin Siblings:" + gameCardSiblings); draw(LINE_END);
-	}
-	
-	public VIEW_CONTROL_CODE drawAskGameCommand() {
-		
-		
-		boolean ask = true;
-
-		do {
-			final String input = drawReadString("What do you want to do? (p)lay, (q)uit ");
-
-			switch (input) {
-			case C_QUIT:
-			case CS_QUIT:
-				ask = false;
-				return VIEW_CONTROL_CODE.QUIT;
-			case "p":
-			case "play":
-				ask = false;
-				return VIEW_CONTROL_CODE.PLAY;
-			default:
-				draw("Unknown Command: " + input);
-				draw(LINE_END);
-				break;
-			}
-
-		} while (ask);
-		
-		return VIEW_CONTROL_CODE.OK;
-	}
-	
-	
-	private void drawAskPlayersGuess(int guess) {
-		
-		CONTROL_CODE code = CONTROL_CODE.OK;
-		
-		do {
-			int row = 0;
-
-			do {
-				row = drawReadInt("Row[" + guess + "]: ");
-				code = setPlayerGuessRow(guess, row);
-				viewHandleEngineError(code);
-			} while (CONTROL_CODE.OK != code);
-
-			int col = 0;
-
-			do {
-				col = drawReadInt("Col[" + guess + "]: ");
-				code = setPlayerGuessCol(guess, row, col);
-				viewHandleEngineError(code);
-			} while (CONTROL_CODE.OK != code);
-
-		} while (viewHandleEngineError(engineDoRevealCard(guess, SHOW_CARDS)));
-		
-	}
-	
-	public CONTROL_CODE setPlayerGuessRow(int guess, int row) {
-		if(row >= boardRows || row < 0) {
-			return CONTROL_CODE.ERR_ROW_NOT_FOUND;
-		}
-		
-		playerGuessRows[guess] = row;
-		
-		return CONTROL_CODE.OK;
-	}
-	
-	public CONTROL_CODE setPlayerGuessCol(int guess, int row, int col) {
-		
-		if(col >= gameBoard[row].length || col < 0) {
-			return CONTROL_CODE.ERR_COL_NOT_FOUND;
-		}
-		
-		playerGuessCols[guess] = col;
-		
-		return CONTROL_CODE.OK;
-	}
-	
+	// Modell
 	
 	public CONTROL_CODE setBoardRows(int amount) {
 		
@@ -313,11 +115,129 @@ public class Memory {
 		
 		return CONTROL_CODE.OK;
 	}
-
-	// Controller
-
 	
-	public void gameInitWithView() {
+	private void modelInitPlayers(String[] playerNames) {
+		this.playerNames = playerNames;
+		playerPoints = new int[playerNames.length];
+	}	
+	
+	private boolean getShadowBoard(int guessIndex) {			
+		int row = playerGuessRows[guessIndex];
+		int col = playerGuessCols[guessIndex];
+		return gameShadowBoard[row][col];
+		
+	}
+
+	private void setShadowBoard(int guessIndex, boolean mask) {
+		
+		int row = playerGuessRows[guessIndex];
+		int col = playerGuessCols[guessIndex];
+		gameShadowBoard[row][col] = mask;
+	}
+
+	private CONTROL_CODE setShadowBoard(int row, int col, boolean mask) {
+		
+		CONTROL_CODE codeCheck = isInBoardRange(row, col);
+		
+		if( CONTROL_CODE.OK != codeCheck) {
+			return codeCheck;
+		}
+		
+		gameShadowBoard[row][col] = mask;
+		
+		return CONTROL_CODE.OK;
+	}
+
+	private CONTROL_CODE resetShadowBoard(int[] row, int[] col) {
+		
+		for(int i = 0; i < row.length; i++) {
+			
+			final CONTROL_CODE code = setShadowBoard(row[i], col[i], !SHOW_CARDS);
+			
+			if(code != CONTROL_CODE.OK) {
+				return code;
+			}
+		}
+		
+		return CONTROL_CODE.OK;
+	}
+
+	private String getCardSign(int[] roundIndex) {
+		
+		String cardSign = "";
+		
+		for(int i = roundIndex.length-1; i >= 0; i--) {
+			
+			if(roundIndex[i] < 0) {
+				continue;
+			}
+			
+			cardSign += (char) (roundIndex[i] + SIGN_FIRST);
+		}
+		
+		return cardSign;
+	}
+
+	private String getGuess(int guessNumber) {
+		return gameBoard[playerGuessRows[guessNumber]][playerGuessCols[guessNumber]];
+	}
+
+	private CONTROL_CODE setCol(String value, final int row, final int col) {
+		
+		final CONTROL_CODE check = isInBoardRange(row, col);
+		
+		if(CONTROL_CODE.OK.equals(check)) {
+			gameBoard[row][col] = value;
+		}			
+		
+		return check;
+	}
+
+	private String getCol(final int row, final int col) {
+		return gameBoard[row][col];
+	}
+
+	public int[] getPlayerHighPoint() {
+		
+		int[] playersHighPoint = new int[playerPoints.length];
+		Arrays.fill(playersHighPoint, -1);
+		
+		for(int i = 0, pointIndex = 0, playerHighPoint = 0; i < playerPoints.length; i++) {
+			
+			if(playerPoints[i] > playerHighPoint) {
+				playerHighPoint = playerPoints[i];
+				playersHighPoint = new int[playerPoints.length];
+				Arrays.fill(playersHighPoint, -1);
+				pointIndex = 0;
+				playersHighPoint[pointIndex] = i;
+				pointIndex++;
+			}
+			
+			if(playerPoints[i] == playerHighPoint) {
+				playersHighPoint[pointIndex] = i;
+				pointIndex++;
+			}			
+			
+		}
+		
+		return playersHighPoint;
+	}
+
+	private int getGameCardsRevealed() {
+		
+		int sum = 0;
+		
+		for(int i = 0; i < playerPoints.length; i++) {
+			sum += playerPoints[i];
+		}
+		
+		return sum * gameCardSiblings;		
+	}
+			
+	
+	//View
+
+	public void viewGameInit() {
 		drawMainWelcome();
 		drawMainConfigure();
 		drawMainAskConfiguration();		
@@ -325,153 +245,25 @@ public class Memory {
 		drawMainAskPlayers();
 	}
 	
-	public boolean viewHandleEngineError(CONTROL_CODE code) {
-		viewEngineControlCode = code;
-		
-		if(CONTROL_CODE.OK == code) {
-			return false;
-		}
-		
-		drawMainControlMessage(code);
-		
-		return true;
+	private void viewInitBoardView() {
+		viewInitBoardViewCardShadowValue(this.boardCardValueWith);
+		viewInitBoardViewRowWith(boardMaxRowElements, boardColWith);
 	}
-	
-	private void drawAskPlayerGuess() {
-		
-		playerGuessRows = new int[gameCardSiblings];
-		playerGuessCols = new int[gameCardSiblings];
-		boardLastSelectedCard = null;
-		boardLastSelectedMatched = false;
-		
-		for(int guessIndex = 0; guessIndex < gameCardSiblings; guessIndex++) {
-			
-			drawAskPlayersGuess(guessIndex);				
-			drawGameBoard();
-			
-			final String card = getGuess(guessIndex);
-			
-			if(!engineDoCardsMatch(boardLastSelectedCard, card)) {
-				return;
-			}
-			
-			boardLastSelectedCard = card;			
-		}
-		
-		boardLastSelectedMatched = true;
+
+	private void viewInitBoardViewRowWith(int rowElements, int colWith) {
+		this.boardViewRowWith = (boardMaxRowElements * ROW_SIGN.length() * (boardColWith + COL_SIGN.length())) + COL_SIGN.length();
 	}
-	
-	protected CONTROL_CODE engineCheckGuess() {
 
-		String lastCard = null;
-
-		for (int guess = 0; guess < CARD_SIBLINGS; guess++) {
-
-			int row = playerGuessRows[guess];
-			int col = playerGuessCols[guess];
-			final String card = getCol(row, col);
-
-			if (!engineDoCardsMatch(lastCard, card)) {
-				return CONTROL_CODE.INFO_CARD_NOT_MATCH;
-			}
-
-			lastCard = card;
+	private void viewInitBoardViewCardShadowValue(int colWith) {
+		for(int i = 0; i< colWith; i++) {
+			this.boardViewCardShadowValue += String.valueOf(SHADOW_SIGN);
 		}
-		
-		return CONTROL_CODE.INFO_CARD_MATCH;
-		
 	}
-	
-	protected CONTROL_CODE engineMove() {
 
-		for (int guess = 0; guess < CARD_SIBLINGS; guess++) {
-			
-			final CONTROL_CODE code = engineDoRevealCard(guess, SHOW_CARDS);
-
-			if (code != CONTROL_CODE.OK) {
-				return code;
-			}
-		}
-		
-		return CONTROL_CODE.OK;
-	}
-	
-	public CONTROL_CODE engineDoMove(int player) {
-		
-		resetShadowBoard(playerGuessRows, playerGuessCols);
-		
-		CONTROL_CODE check = engineCheckGuess();
-		if(check == CONTROL_CODE.INFO_CARD_NOT_MATCH) {
-			return check;
-		}
-		
-		check = engineMove();
-		if(check != CONTROL_CODE.OK) {
-			return check;
-		}
-		
-		playerPoints[player]++;
-		
-		return CONTROL_CODE.INFO_CARD_MATCH;
-	}
-	
-	private CONTROL_CODE drawMoveResult(CONTROL_CODE code) {
-		
-		if(CONTROL_CODE.INFO_CARD_MATCH == code) {
-			draw("Congratulation, you found a match!");
-			return CONTROL_CODE.OK;
-		} 
-
-		if (CONTROL_CODE.INFO_CARD_NOT_MATCH == code) {
-			drawGameHint("Sorry, no match  (Enter to Continue)");
-			return CONTROL_CODE.OK;
-		} 
-		
-		viewHandleEngineError(code);
-		
-		return code;
-	}
-	
-	private void drawGameFinished() {
-		
-		int[] playersWon = getPlayerHighPoint();
-		
-		draw("Congratulation!!");
-		draw(LINE_END);
-		
-		for(int playerWon : playersWon) {
-			draw(LINE_END);
-			draw(playerNames[playerWon]);
-			draw(" has won");
-		}
-		
-		draw(LINE_END);
-		draw(LINE_END);
-		draw("Thank you for playing. I hope I'll see you soon! Bye-Bye");draw(LINE_END);
-		
-	}
-	
-	public int drawPlayersTurn(int player) {
-		
-		drawAskPlayerGuess();
-		
-		if(drawMoveResult(engineDoMove(player)) != CONTROL_CODE.OK){
-			return player;
-		}
-		
-		if(player + 1 >= playerNames.length) {
-			return 0;
-		}
-		
-		return player + 1;
-	}
-	
-	
-	
-	public void gamePlay() {
+	public void viewGamePlay() {
 				
-		initPlayers(this.playerNames);
-		initGame(this.boardRows);
+		modelInitPlayers(this.playerNames);
+		engineInitGame(this.boardRows);
 		
 		int player = 0;
 		
@@ -496,78 +288,35 @@ public class Memory {
 		drawGameFinished();		
 	}
 	
-	private void initGame(int boardWith) {
-		initBoard(boardWith);
+	private boolean viewHandleEngineError(CONTROL_CODE code) {
+		viewEngineControlCode = code;
 		
-	}
-	
-	private void drawMainAskPlayers() {
-		
-		draw("Set player names, (e)xit when finished:");
-		draw(LINE_END);
-		draw(LINE_END);
-		
-		int playerNumber = 0;
-		boolean initPlayer = true;
-		
-		while(initPlayer) {
-			
-			final String input = drawReadString("Player " + playerNumber + ": ");
-			
-			if(drawGameAskYesNo(isExit(input), "Do you really want to exit? (y/n)")){
-				initPlayer = false;
-				continue;
-			}
-			
-			if(playerNumber >= playerNames.length) {
-				playerNames = Arrays.copyOf(playerNames, playerNames.length + 1);
-			}
-			playerNames[playerNumber] = input;
-			playerNumber ++;
+		if(CONTROL_CODE.OK == code) {
+			return false;
 		}
-	}
-	
-	//Model
-	
-	private void initPlayers(String[] playerNames) {
-		this.playerNames = playerNames;
-		playerPoints = new int[playerNames.length];
-	}
-	
-	private void intBoards(int width){		
 		
-		this.gameBoard = new String[width][width * gameCardSiblings];
-		this.gameShadowBoard = new boolean[width][width * gameCardSiblings];
+		drawMainControlMessage(code);
 		
-		initBoardMaxElements(gameBoard);
-		
-		final String[] cards = shuffleCards(getGameCardDeck(gameBoard));  
-		
-		for(int row = 0, card = 0; row < gameBoard.length; row ++) {
-			
-			for(int col = 0; col < gameBoard[row].length; col++, card++) {
-				gameBoard[row][col] = cards[card];
-				gameShadowBoard[row][col] = !SHOW_CARDS;
-			}
-		}
-	}	
-	
-	//View
-	
-	private void initBoardViewRowWith(int rowElements, int colWith) {
-		this.boardViewRowWith = (boardMaxRowElements * ROW_SIGN.length() * (boardColWith + COL_SIGN.length())) + COL_SIGN.length();
+		return true;
 	}
 
-	private void initBoardViewCardShadowValue(int colWith) {
-		for(int i = 0; i< colWith; i++) {
-			this.boardViewCardShadowValue += String.valueOf(SHADOW_SIGN);
+	private boolean viewIsExit(String input) {
+		
+		if (C_EXIT.equalsIgnoreCase(input) || CS_EXIT.equalsIgnoreCase(input)) {
+			return true;
 		}
+		
+		return false;
+	}
+
+	private boolean viewIsYes(String input) {
+		return "y".equalsIgnoreCase(input);
 	}
 
 	private void draw(String text) {
 		System.out.print(text);
 	}
-	
+
 	private String drawReadString(String text) {
 		drawNotEmpty(text);
 		return input.next();		
@@ -596,6 +345,32 @@ public class Memory {
 		draw(LINE_END);
 		draw("Lets play !!");
 		draw(LINE_END);
+	}
+
+	private void drawMainAskPlayers() {
+		
+		draw("Set player names, (e)xit when finished:");
+		draw(LINE_END);
+		draw(LINE_END);
+		
+		int playerNumber = 0;
+		boolean initPlayer = true;
+		
+		while(initPlayer) {
+			
+			final String input = drawReadString("Player " + playerNumber + ": ");
+			
+			if(drawGameAskYesNo(viewIsExit(input), "Do you really want to exit? (y/n)")){
+				initPlayer = false;
+				continue;
+			}
+			
+			if(playerNumber >= playerNames.length) {
+				playerNames = Arrays.copyOf(playerNames, playerNames.length + 1);
+			}
+			playerNames[playerNumber] = input;
+			playerNumber ++;
+		}
 	}
 
 	private void drawGameStats() {
@@ -631,7 +406,7 @@ public class Memory {
 			return false;
 		}
 		
-		return isYes(drawReadString(question));		
+		return viewIsYes(drawReadString(question));		
 	}
 
 	private void drawBoardHeader() {		
@@ -745,20 +520,252 @@ public class Memory {
 		draw(LINE_END);	
 	}
 
-	//View
+	private void drawMainWelcome() {
+		draw(LINE_END);
+		draw("--------------------"); draw(LINE_END);
+		draw("A simple Memory Game"); draw(LINE_END);
+		draw("--------------------"); draw(LINE_END);
+		draw(LINE_END);
+	}
 
-	private boolean isExit(String input) {
+	private void drawMainConfigure() {
+		draw(LINE_END);
+		draw("Configure Game"); draw(LINE_END);
+		draw("--------------"); draw(LINE_END);
+		draw(LINE_END);
+		drawMainConfigureHelp();
 		
-		if (C_EXIT.equalsIgnoreCase(input) || CS_EXIT.equalsIgnoreCase(input)) {
-			return true;
+	}
+
+	private void drawMainConfigureHelp() {
+		draw("* Configure the amount of (r)ows the board shall have"); draw(LINE_END);
+		draw("* Configure the amount of (c)ard siblings"); draw(LINE_END);
+		draw("* (h)elp"); draw(LINE_END);
+		draw("* (p)rint"); draw(LINE_END);
+		draw("* (e)xit"); draw(LINE_END);
+	}
+
+	private void drawMainControlMessage(CONTROL_CODE code) {
+		drawMainControlMessage(code, "");
+	}
+
+	private void drawMainControlMessage(CONTROL_CODE code, String text) {
+		
+		switch (code) {
+		case OK:
+			draw("O.K. "); draw(LINE_END);
+			break;
+		case EXIT:
+			draw("User requestet exit. "); draw(LINE_END);
+			break;
+		case ERR_VALUE_TOO_SMALL:
+			draw("Value too small. ");drawNotEmpty(text); draw(LINE_END);
+			break;
+		case ERR_COL_NOT_FOUND:
+			draw("Column not in range. ");drawNotEmpty(text); draw(LINE_END);
+			break;
+		case ERR_ROW_NOT_FOUND:
+			draw("Row not in range. ");drawNotEmpty(text); draw(LINE_END);
+			break;
+		case ERR_CARD_IS_REVEALED:
+			draw("The card has allready been revealed. ");drawNotEmpty(text); draw(LINE_END);
+			break;
+	
+		default:
+			draw("Err: Control Code not found: " + code); draw(LINE_END);
 		}
 		
-		return false;
+		
 	}
 
-	private boolean isYes(String input) {
-		return "y".equalsIgnoreCase(input);
+	private void drawMainAskConfiguration() {
+		
+		draw("Configure Game"); draw(LINE_END);
+				
+		boolean configure = true;
+		CONTROL_CODE code = CONTROL_CODE.OK;
+		String message = "";
+		
+		while(configure) {
+			
+			final String input = drawReadString("Configure (r)ow, (card) or (h)elp, (p)rint, (e)xit: ");
+	
+			switch (input) {
+			case "r":
+			case "rows":
+				code = setBoardRows(drawReadInt("Amount of rows (Default: " + BOARD_ROWS + "): "));
+				message = "Row value has to be greater 0";
+				break;
+			case "c":
+			case "card":
+				code = setGameCardSiblings(drawReadInt("Amount of card siblings (Default: " + CARD_SIBLINGS + "): "));
+				message = "Sibling value has to be greater than " + (CARD_SIBLINGS - 1) ;
+				break;
+			case CS_EXIT:
+			case C_EXIT:
+				code = CONTROL_CODE.EXIT;
+				message = "Exit configuration.";
+				configure = false; 
+				break;
+			case CS_PRINT:
+			case C_PRINT:
+				drawMainPrintConfiguration();
+				code = CONTROL_CODE.OK;
+				break;
+			case CS_HELP:
+			case C_HELP:
+				drawMainConfigureHelp();
+				code = CONTROL_CODE.OK;
+				break;
+			default:
+				draw("Unknown Command: " + input);draw(LINE_END);
+				break;
+			}
+			
+			if(CONTROL_CODE.OK != code) {
+				drawMainControlMessage(code, message);
+			}
+			
+			message = "";			
+		}
+		
+		
 	}
+
+	private void drawMainPrintConfiguration(){
+		draw("Amount Board Rows:" + boardRows); draw(LINE_END);
+		draw("Amount Matchin Siblings:" + gameCardSiblings); draw(LINE_END);
+	}
+
+	private VIEW_CONTROL_CODE drawAskGameCommand() {
+		
+		
+		boolean ask = true;
+	
+		do {
+			final String input = drawReadString("What do you want to do? (p)lay, (q)uit ");
+	
+			switch (input) {
+			case C_QUIT:
+			case CS_QUIT:
+				ask = false;
+				return VIEW_CONTROL_CODE.QUIT;
+			case "p":
+			case "play":
+				ask = false;
+				return VIEW_CONTROL_CODE.PLAY;
+			default:
+				draw("Unknown Command: " + input);
+				draw(LINE_END);
+				break;
+			}
+	
+		} while (ask);
+		
+		return VIEW_CONTROL_CODE.OK;
+	}
+
+	private void drawAskPlayersGuess(int guess) {
+		
+		CONTROL_CODE code = CONTROL_CODE.OK;
+		
+		do {
+			int row = 0;
+	
+			do {
+				row = drawReadInt("Row[" + guess + "]: ");
+				code = engineSetPlayerGuessRow(guess, row);
+				viewHandleEngineError(code);
+			} while (CONTROL_CODE.OK != code);
+	
+			int col = 0;
+	
+			do {
+				col = drawReadInt("Col[" + guess + "]: ");
+				code = engineSetPlayerGuessCol(guess, row, col);
+				viewHandleEngineError(code);
+			} while (CONTROL_CODE.OK != code);
+	
+		} while (viewHandleEngineError(engineDoRevealCard(guess, SHOW_CARDS)));
+		
+	}
+
+	private CONTROL_CODE drawMoveResult(CONTROL_CODE code) {
+		
+		if(CONTROL_CODE.INFO_CARD_MATCH == code) {
+			draw("Congratulation, you found a match!");
+			return CONTROL_CODE.OK;
+		} 
+	
+		if (CONTROL_CODE.INFO_CARD_NOT_MATCH == code) {
+			drawGameHint("Sorry, no match  (Enter to Continue)");
+			return CONTROL_CODE.OK;
+		} 
+		
+		viewHandleEngineError(code);
+		
+		return code;
+	}
+
+	private void drawGameFinished() {
+		
+		int[] playersWon = getPlayerHighPoint();
+		
+		draw("Congratulation!!");
+		draw(LINE_END);
+		
+		for(int playerWon : playersWon) {
+			draw(LINE_END);
+			draw(playerNames[playerWon]);
+			draw(" has won");
+		}
+		
+		draw(LINE_END);
+		draw(LINE_END);
+		draw("Thank you for playing. I hope I'll see you soon! Bye-Bye");draw(LINE_END);
+		
+	}
+
+	private int drawPlayersTurn(int player) {
+		
+		drawAskPlayerGuess();
+		
+		if(drawMoveResult(engineDoMove(player)) != CONTROL_CODE.OK){
+			return player;
+		}
+		
+		if(player + 1 >= playerNames.length) {
+			return 0;
+		}
+		
+		return player + 1;
+	}
+
+	private void drawAskPlayerGuess() {
+		
+		playerGuessRows = new int[gameCardSiblings];
+		playerGuessCols = new int[gameCardSiblings];
+		boardLastSelectedCard = null;
+		boardLastSelectedMatched = false;
+		
+		for(int guessIndex = 0; guessIndex < gameCardSiblings; guessIndex++) {
+			
+			drawAskPlayersGuess(guessIndex);				
+			drawGameBoard();
+			
+			final String card = getGuess(guessIndex);
+			
+			if(!engineDoCardsMatch(boardLastSelectedCard, card)) {
+				return;
+			}
+			
+			boardLastSelectedCard = card;			
+		}
+		
+		boardLastSelectedMatched = true;
+	}
+
+	
 	
 	// Controller
 
@@ -820,16 +827,9 @@ public class Memory {
 		gameInitBoardColWith(this.boardCardValueWith);		
 	}
 	
-	private void initBoardView() {
-		initBoardViewCardShadowValue(this.boardCardValueWith);
-		initBoardViewRowWith(boardMaxRowElements, boardColWith);
-	}
 	
-	private void initBoard(int boardWith) {
-		intBoards(boardWith);		
-		initBoardDimensions(this.gameBoard);
-		initBoardView();
-	}
+	
+	
 	
 	//Controller
 	
@@ -847,6 +847,89 @@ public class Memory {
 	}
 	
 	
+	private void engineInitBoard(int boardWith) {
+		engineInitBoards(boardWith);		
+		initBoardDimensions(this.gameBoard);
+		viewInitBoardView();
+	}
+
+	private void engineInitGame(int boardWith) {
+		engineInitBoard(boardWith);
+		
+	}
+
+	private void engineInitBoards(int width){		
+		
+		this.gameBoard = new String[width][width * gameCardSiblings];
+		this.gameShadowBoard = new boolean[width][width * gameCardSiblings];
+		
+		initBoardMaxElements(gameBoard);
+		
+		final String[] cards = shuffleCards(getGameCardDeck(gameBoard));  
+		
+		for(int row = 0, card = 0; row < gameBoard.length; row ++) {
+			
+			for(int col = 0; col < gameBoard[row].length; col++, card++) {
+				gameBoard[row][col] = cards[card];
+				gameShadowBoard[row][col] = !SHOW_CARDS;
+			}
+		}
+	}
+
+	public CONTROL_CODE engineDoMove(int player) {
+		
+		resetShadowBoard(playerGuessRows, playerGuessCols);
+		
+		CONTROL_CODE check = engineCheckGuess();
+		if(check == CONTROL_CODE.INFO_CARD_NOT_MATCH) {
+			return check;
+		}
+		
+		check = engineDoMove();
+		if(check != CONTROL_CODE.OK) {
+			return check;
+		}
+		
+		playerPoints[player]++;
+		
+		return CONTROL_CODE.INFO_CARD_MATCH;
+	}
+
+	protected CONTROL_CODE engineDoMove() {
+	
+		for (int guess = 0; guess < CARD_SIBLINGS; guess++) {
+			
+			final CONTROL_CODE code = engineDoRevealCard(guess, SHOW_CARDS);
+	
+			if (code != CONTROL_CODE.OK) {
+				return code;
+			}
+		}
+		
+		return CONTROL_CODE.OK;
+	}
+
+	protected CONTROL_CODE engineCheckGuess() {
+	
+		String lastCard = null;
+	
+		for (int guess = 0; guess < CARD_SIBLINGS; guess++) {
+	
+			int row = playerGuessRows[guess];
+			int col = playerGuessCols[guess];
+			final String card = getCol(row, col);
+	
+			if (!engineDoCardsMatch(lastCard, card)) {
+				return CONTROL_CODE.INFO_CARD_NOT_MATCH;
+			}
+	
+			lastCard = card;
+		}
+		
+		return CONTROL_CODE.INFO_CARD_MATCH;
+		
+	}
+
 	protected CONTROL_CODE engineDoRevealCard(int guessIndex, boolean mask) {
 		
 		if(mask == getShadowBoard(guessIndex)) {
@@ -858,56 +941,25 @@ public class Memory {
 		return CONTROL_CODE.OK;		
 	}
 	
-	private boolean getShadowBoard(int guessIndex) {			
-		int row = playerGuessRows[guessIndex];
-		int col = playerGuessCols[guessIndex];
-		return gameShadowBoard[row][col];
-		
-	}
-	
-	private void setShadowBoard(int guessIndex, boolean mask) {
-		
-		int row = playerGuessRows[guessIndex];
-		int col = playerGuessCols[guessIndex];
-		gameShadowBoard[row][col] = mask;
-	}
-	
-	private CONTROL_CODE setShadowBoard(int row, int col, boolean mask) {
-		
-		CONTROL_CODE codeCheck = isInBoardRange(row, col);
-		
-		if( CONTROL_CODE.OK != codeCheck) {
-			return codeCheck;
+	public CONTROL_CODE engineSetPlayerGuessRow(int guess, int row) {
+		if(row >= boardRows || row < 0) {
+			return CONTROL_CODE.ERR_ROW_NOT_FOUND;
 		}
 		
-		gameShadowBoard[row][col] = mask;
+		playerGuessRows[guess] = row;
 		
 		return CONTROL_CODE.OK;
 	}
 
-	private CONTROL_CODE resetShadowBoard(int[] row, int[] col) {
+	public CONTROL_CODE engineSetPlayerGuessCol(int guess, int row, int col) {
 		
-		for(int i = 0; i < row.length; i++) {
-			
-			final CONTROL_CODE code = setShadowBoard(row[i], col[i], !SHOW_CARDS);
-			
-			if(code != CONTROL_CODE.OK) {
-				return code;
-			}
+		if(col >= gameBoard[row].length || col < 0) {
+			return CONTROL_CODE.ERR_COL_NOT_FOUND;
 		}
+		
+		playerGuessCols[guess] = col;
 		
 		return CONTROL_CODE.OK;
-	}
-
-	private int getGameCardsRevealed() {
-		
-		int sum = 0;
-		
-		for(int i = 0; i < playerPoints.length; i++) {
-			sum += playerPoints[i];
-		}
-		
-		return sum * gameCardSiblings;		
 	}
 
 	private boolean engineDoCardsMatch(String first, String second) {		
@@ -974,70 +1026,5 @@ public class Memory {
 			roundIndex[i] = 0;
 		}		
 	}
-	
-	private String getCardSign(int[] roundIndex) {
-		
-		String cardSign = "";
-		
-		for(int i = roundIndex.length-1; i >= 0; i--) {
-			
-			if(roundIndex[i] < 0) {
-				continue;
-			}
-			
-			cardSign += (char) (roundIndex[i] + SIGN_FIRST);
-		}
-		
-		return cardSign;
-	}
-	
-	private String getGuess(int guessNumber) {
-		return gameBoard[playerGuessRows[guessNumber]][playerGuessCols[guessNumber]];
-	}
-	
-	private CONTROL_CODE setCol(String value, final int row, final int col) {
-		
-		final CONTROL_CODE check = isInBoardRange(row, col);
-		
-		if(CONTROL_CODE.OK.equals(check)) {
-			gameBoard[row][col] = value;
-		}			
-		
-		return check;
-	}
-	
-	private String getCol(final int row, final int col) {
-		return gameBoard[row][col];
-	}
-	
-	public int[] getPlayerHighPoint() {
-		
-		int[] playersHighPoint = new int[playerPoints.length];
-		Arrays.fill(playersHighPoint, -1);
-		
-		for(int i = 0, pointIndex = 0, playerHighPoint = 0; i < playerPoints.length; i++) {
-			
-			if(playerPoints[i] > playerHighPoint) {
-				playerHighPoint = playerPoints[i];
-				playersHighPoint = new int[playerPoints.length];
-				Arrays.fill(playersHighPoint, -1);
-				pointIndex = 0;
-				playersHighPoint[pointIndex] = i;
-				pointIndex++;
-			}
-			
-			if(playerPoints[i] == playerHighPoint) {
-				playersHighPoint[pointIndex] = i;
-				pointIndex++;
-			}			
-			
-		}
-		
-		return playersHighPoint;
-	}
-	
-	
-	
-	
 
 }
