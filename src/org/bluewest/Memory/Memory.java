@@ -247,25 +247,31 @@ public class Memory {
 	
 	private void drawAskPlayersGuess(int guess) {
 		
+		CONTROL_CODE code = CONTROL_CODE.OK;
+		
 		do {
 			int row = 0;
 
 			do {
 				row = drawReadInt("Row[" + guess + "]: ");
-			} while (CONTROL_CODE.OK != setPlayerGuessRow(guess, row));
+				code = setPlayerGuessRow(guess, row);
+				viewHandleEngineError(code);
+			} while (CONTROL_CODE.OK != code);
 
 			int col = 0;
 
 			do {
 				col = drawReadInt("Col[" + guess + "]: ");
-			} while (CONTROL_CODE.OK != setPlayerGuessCol(guess, row, col));
+				code = setPlayerGuessCol(guess, row, col);
+				viewHandleEngineError(code);
+			} while (CONTROL_CODE.OK != code);
 
 		} while (viewHandleEngineError(engineDoRevealCard(guess, SHOW_CARDS)));
 		
 	}
 	
 	public CONTROL_CODE setPlayerGuessRow(int guess, int row) {
-		if(row >= boardRows) {
+		if(row >= boardRows || row < 0) {
 			return CONTROL_CODE.ERR_ROW_NOT_FOUND;
 		}
 		
@@ -276,7 +282,7 @@ public class Memory {
 	
 	public CONTROL_CODE setPlayerGuessCol(int guess, int row, int col) {
 		
-		if(col >= gameBoard[row].length) {
+		if(col >= gameBoard[row].length || col < 0) {
 			return CONTROL_CODE.ERR_COL_NOT_FOUND;
 		}
 		
@@ -740,15 +746,6 @@ public class Memory {
 	}
 
 	//View
-		
-	private boolean isQuit(String input) {
-		
-		if (C_QUIT.equalsIgnoreCase(input) || CS_QUIT.equalsIgnoreCase(input)) {
-			return true;
-		}
-		
-		return false;
-	}
 
 	private boolean isExit(String input) {
 		
