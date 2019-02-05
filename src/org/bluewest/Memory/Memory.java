@@ -49,7 +49,6 @@ public class Memory {
 	private final static String COL_SIGN = "|";
 	private final static char SHADOW_SIGN = '*';
 	private final static String LINE_END = System.lineSeparator();
-	private CONTROL_CODE viewEngineControlCode = CONTROL_CODE.OK;
 	
 	//-- Cards 
 	private final static int SIGN_FIRST = 65;
@@ -63,7 +62,6 @@ public class Memory {
 	private int gameCardSiblings = CARD_SIBLINGS;
 	private String[][] gameBoard = null;
 	private boolean[][] gameShadowBoard = null;
-	private CONTROL_CODE gameControlCode = CONTROL_CODE.OK;
 	
 	//-- Player
 	private String[] playerNames = new String[0];
@@ -79,11 +77,9 @@ public class Memory {
 	//- View
 	private final Scanner input = new Scanner(System.in);
 	private int boardViewRowWith = 0;
-	private int boardCardValueWith = 0;
-	private int boardColWith = 0;
+	private int boardViewCardValueWith = 0;
+	private int boardViewColWith = 0;
 	private String boardViewCardShadowValue = "";
-	private String boardLastSelectedCard = null;
-	private boolean boardLastSelectedMatched = false;
 	
 
 	public static void main(String[] args) {
@@ -246,12 +242,12 @@ public class Memory {
 	}
 	
 	private void viewInitBoardView() {
-		viewInitBoardViewCardShadowValue(this.boardCardValueWith);
-		viewInitBoardViewRowWith(boardMaxRowElements, boardColWith);
+		viewInitBoardViewCardShadowValue(this.boardViewCardValueWith);
+		viewInitBoardViewRowWith(boardMaxRowElements, boardViewColWith);
 	}
 
 	private void viewInitBoardViewRowWith(int rowElements, int colWith) {
-		this.boardViewRowWith = (boardMaxRowElements * ROW_SIGN.length() * (boardColWith + COL_SIGN.length())) + COL_SIGN.length();
+		this.boardViewRowWith = (boardMaxRowElements * ROW_SIGN.length() * (boardViewColWith + COL_SIGN.length())) + COL_SIGN.length();
 	}
 
 	private void viewInitBoardViewCardShadowValue(int colWith) {
@@ -278,11 +274,11 @@ public class Memory {
 			}
 		}
 		
-		this.boardCardValueWith = maxColWith;		
+		this.boardViewCardValueWith = maxColWith;		
 	}
 
 	private void viewInitBoardColWith(int cardValueWith) {
-		this.boardColWith = cardValueWith + (COL_FILLER.length() *2);
+		this.boardViewColWith = cardValueWith + (COL_FILLER.length() *2);
 	}
 
 	public void viewGamePlay() {
@@ -314,7 +310,6 @@ public class Memory {
 	}
 	
 	private boolean viewHandleEngineError(CONTROL_CODE code) {
-		viewEngineControlCode = code;
 		
 		if(CONTROL_CODE.OK == code) {
 			return false;
@@ -500,9 +495,9 @@ public class Memory {
 		
 		String cardValue = "";
 		
-		for(int i = 0; i < this.boardCardValueWith; i++) {
+		for(int i = 0; i < this.boardViewCardValueWith; i++) {
 			
-			if( this.boardCardValueWith <= i + colValue.length()) {
+			if( this.boardViewCardValueWith <= i + colValue.length()) {
 				break;
 			}
 			
@@ -770,8 +765,7 @@ public class Memory {
 		
 		playerGuessRows = new int[gameCardSiblings];
 		playerGuessCols = new int[gameCardSiblings];
-		boardLastSelectedCard = null;
-		boardLastSelectedMatched = false;
+		String lastCard = null;
 		
 		for(int guessIndex = 0; guessIndex < gameCardSiblings; guessIndex++) {
 			
@@ -780,14 +774,12 @@ public class Memory {
 			
 			final String card = modelGetGuess(guessIndex);
 			
-			if(!engineDoCardsMatch(boardLastSelectedCard, card)) {
+			if(!engineDoCardsMatch(lastCard, card)) {
 				return;
 			}
 			
-			boardLastSelectedCard = card;			
+			lastCard = card;			
 		}
-		
-		boardLastSelectedMatched = true;
 	}	
 	
 	// Controller
@@ -822,7 +814,7 @@ public class Memory {
 	private void engineInitBoardDimensions( final String[][] board) {
 		viewInitBoardCardValueWith(board);
 		engineInitBoardMaxRowElements(board);
-		viewInitBoardColWith(this.boardCardValueWith);		
+		viewInitBoardColWith(this.boardViewCardValueWith);		
 	}
 	
 	private CONTROL_CODE engineIsInBoardRange(final int row, final int col) {
