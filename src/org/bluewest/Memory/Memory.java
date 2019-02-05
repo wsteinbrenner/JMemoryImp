@@ -121,23 +121,23 @@ public class Memory {
 		playerPoints = new int[playerNames.length];
 	}	
 	
-	private boolean getShadowBoard(int guessIndex) {			
+	private boolean modelGetShadowBoard(int guessIndex) {			
 		int row = playerGuessRows[guessIndex];
 		int col = playerGuessCols[guessIndex];
 		return gameShadowBoard[row][col];
 		
 	}
 
-	private void setShadowBoard(int guessIndex, boolean mask) {
+	private void modelSetShadowBoard(int guessIndex, boolean mask) {
 		
 		int row = playerGuessRows[guessIndex];
 		int col = playerGuessCols[guessIndex];
 		gameShadowBoard[row][col] = mask;
 	}
 
-	private CONTROL_CODE setShadowBoard(int row, int col, boolean mask) {
+	private CONTROL_CODE modelSetShadowBoard(int row, int col, boolean mask) {
 		
-		CONTROL_CODE codeCheck = isInBoardRange(row, col);
+		CONTROL_CODE codeCheck = engineIsInBoardRange(row, col);
 		
 		if( CONTROL_CODE.OK != codeCheck) {
 			return codeCheck;
@@ -148,11 +148,11 @@ public class Memory {
 		return CONTROL_CODE.OK;
 	}
 
-	private CONTROL_CODE resetShadowBoard(int[] row, int[] col) {
+	private CONTROL_CODE modelResetShadowBoard(int[] row, int[] col) {
 		
 		for(int i = 0; i < row.length; i++) {
 			
-			final CONTROL_CODE code = setShadowBoard(row[i], col[i], !SHOW_CARDS);
+			final CONTROL_CODE code = modelSetShadowBoard(row[i], col[i], !SHOW_CARDS);
 			
 			if(code != CONTROL_CODE.OK) {
 				return code;
@@ -162,7 +162,7 @@ public class Memory {
 		return CONTROL_CODE.OK;
 	}
 
-	private String getCardSign(int[] roundIndex) {
+	private String modelGetCardSign(int[] roundIndex) {
 		
 		String cardSign = "";
 		
@@ -178,13 +178,13 @@ public class Memory {
 		return cardSign;
 	}
 
-	private String getGuess(int guessNumber) {
+	private String modelGetGuess(int guessNumber) {
 		return gameBoard[playerGuessRows[guessNumber]][playerGuessCols[guessNumber]];
 	}
 
 	private CONTROL_CODE setCol(String value, final int row, final int col) {
 		
-		final CONTROL_CODE check = isInBoardRange(row, col);
+		final CONTROL_CODE check = engineIsInBoardRange(row, col);
 		
 		if(CONTROL_CODE.OK.equals(check)) {
 			gameBoard[row][col] = value;
@@ -260,6 +260,31 @@ public class Memory {
 		}
 	}
 
+	private void viewInitBoardCardValueWith( final String[][] board) {
+		
+		int maxColWith = 0;
+		
+		for (int row = 0; row < board.length; row++) {
+	
+			final String[] col = board[row];		
+	
+			for (int i = 0; i < col.length; i++) {
+				
+				int colWith = board[row][i].length();
+				
+				if(colWith > maxColWith) {
+					maxColWith = colWith;
+				}
+			}
+		}
+		
+		this.boardCardValueWith = maxColWith;		
+	}
+
+	private void viewInitBoardColWith(int cardValueWith) {
+		this.boardColWith = cardValueWith + (COL_FILLER.length() *2);
+	}
+
 	public void viewGamePlay() {
 				
 		modelInitPlayers(this.playerNames);
@@ -279,7 +304,7 @@ public class Memory {
 			
 			player = drawPlayersTurn(player);
 			
-			if(getGameCardsLeft() <= 0) {
+			if(enginGetGameCardsLeft() <= 0) {
 				break;
 			}
 			
@@ -753,7 +778,7 @@ public class Memory {
 			drawAskPlayersGuess(guessIndex);				
 			drawGameBoard();
 			
-			final String card = getGuess(guessIndex);
+			final String card = modelGetGuess(guessIndex);
 			
 			if(!engineDoCardsMatch(boardLastSelectedCard, card)) {
 				return;
@@ -763,38 +788,11 @@ public class Memory {
 		}
 		
 		boardLastSelectedMatched = true;
-	}
-
-	private void viewInitBoardCardValueWith( final String[][] board) {
-		
-		int maxColWith = 0;
-		
-		for (int row = 0; row < board.length; row++) {
-
-			final String[] col = board[row];		
-
-			for (int i = 0; i < col.length; i++) {
-				
-				int colWith = board[row][i].length();
-				
-				if(colWith > maxColWith) {
-					maxColWith = colWith;
-				}
-			}
-		}
-		
-		this.boardCardValueWith = maxColWith;		
-	}
-	
-	private void viewInitBoardColWith(int cardValueWith) {
-		this.boardColWith = cardValueWith + (COL_FILLER.length() *2);
-	}
-
-	
+	}	
 	
 	// Controller
 	
-	private void initBoardMaxRowElements( final String[][] board) {
+	private void engineInitBoardMaxRowElements( final String[][] board) {
 				
 		int maxRowElements = 0;
 		
@@ -810,7 +808,7 @@ public class Memory {
 		this.boardMaxRowElements = maxRowElements;
 	}
 	
-	private void initBoardMaxElements(String[][] board) {
+	private void engineInitBoardMaxElements(String[][] board) {
 		
 		int boardElements = 0;
 		
@@ -821,13 +819,13 @@ public class Memory {
 		this.boardMaxElements = boardElements;
 	}
 	
-	private void initBoardDimensions( final String[][] board) {
+	private void engineInitBoardDimensions( final String[][] board) {
 		viewInitBoardCardValueWith(board);
-		initBoardMaxRowElements(board);
+		engineInitBoardMaxRowElements(board);
 		viewInitBoardColWith(this.boardCardValueWith);		
 	}
 	
-	private CONTROL_CODE isInBoardRange(final int row, final int col) {
+	private CONTROL_CODE engineIsInBoardRange(final int row, final int col) {
 		
 		if(row >= gameBoard.length) {
 			return CONTROL_CODE.ERR_ROW_NOT_FOUND;
@@ -843,7 +841,7 @@ public class Memory {
 	
 	private void engineInitBoard(int boardWith) {
 		engineInitBoards(boardWith);		
-		initBoardDimensions(this.gameBoard);
+		engineInitBoardDimensions(this.gameBoard);
 		viewInitBoardView();
 	}
 
@@ -857,9 +855,9 @@ public class Memory {
 		this.gameBoard = new String[width][width * gameCardSiblings];
 		this.gameShadowBoard = new boolean[width][width * gameCardSiblings];
 		
-		initBoardMaxElements(gameBoard);
+		engineInitBoardMaxElements(gameBoard);
 		
-		final String[] cards = shuffleCards(getGameCardDeck(gameBoard));  
+		final String[] cards = engineCardDeckShuffle(engineGetCardDeck(gameBoard));  
 		
 		for(int row = 0, card = 0; row < gameBoard.length; row ++) {
 			
@@ -872,7 +870,7 @@ public class Memory {
 
 	public CONTROL_CODE engineDoMove(int player) {
 		
-		resetShadowBoard(playerGuessRows, playerGuessCols);
+		modelResetShadowBoard(playerGuessRows, playerGuessCols);
 		
 		CONTROL_CODE check = engineCheckGuess();
 		if(check == CONTROL_CODE.INFO_CARD_NOT_MATCH) {
@@ -926,11 +924,11 @@ public class Memory {
 
 	protected CONTROL_CODE engineDoRevealCard(int guessIndex, boolean mask) {
 		
-		if(mask == getShadowBoard(guessIndex)) {
+		if(mask == modelGetShadowBoard(guessIndex)) {
 			return CONTROL_CODE.ERR_CARD_IS_REVEALED;
 		}
 		
-		setShadowBoard(guessIndex, mask);
+		modelSetShadowBoard(guessIndex, mask);
 		
 		return CONTROL_CODE.OK;		
 	}
@@ -947,6 +945,10 @@ public class Memory {
 
 	public CONTROL_CODE engineSetPlayerGuessCol(int guess, int row, int col) {
 		
+		if(row >= boardRows || row < 0) {
+			return CONTROL_CODE.ERR_ROW_NOT_FOUND;
+		}
+		
 		if(col >= gameBoard[row].length || col < 0) {
 			return CONTROL_CODE.ERR_COL_NOT_FOUND;
 		}
@@ -961,18 +963,18 @@ public class Memory {
 	}
 		
 
-	private int getGameCardsLeft() {
+	private int enginGetGameCardsLeft() {
 		return boardMaxElements - getGameCardsRevealed();
 	}
 
-	private String[] getGameCardDeck(String[][] board) {	
+	private String[] engineGetCardDeck(String[][] board) {	
 		final String[] cards = new String[boardMaxElements];
 		final int[] roundIndex = new int[(int) (cards.length / SIGN_RANGE)];
 		Arrays.fill(roundIndex, -1);
 		
 		for (int i = 0; i < cards.length; i++) {
-			incrementCardRoundIndex(roundIndex);
-			final String cardSign = getCardSign(roundIndex);
+			engineCardDeckIncrement(roundIndex);
+			final String cardSign = modelGetCardSign(roundIndex);
 			cards[i] = cardSign;
 			cards[++i] = cardSign; 
 		}
@@ -980,7 +982,20 @@ public class Memory {
 		return cards;
 	}
 	
-	private String[] shuffleCards(String[] cards) {
+	private void engineCardDeckIncrement(int[] roundIndex) {
+						
+		for(int i = 0; i < roundIndex.length; i++) {
+			
+			if(roundIndex[i] < SIGN_RANGE) {
+				roundIndex[i]++;
+				break;
+			}
+			
+			roundIndex[i] = 0;
+		}		
+	}
+
+	private String[] engineCardDeckShuffle(String[] cards) {
 		
 		final String[] shuffledCards = new String[cards.length];
 		final Random randGen = new Random(System.nanoTime());		
@@ -1006,19 +1021,6 @@ public class Memory {
 		}
 		
 		return shuffledCards;
-	}
-	
-	private void incrementCardRoundIndex(int[] roundIndex) {
-						
-		for(int i = 0; i < roundIndex.length; i++) {
-			
-			if(roundIndex[i] < SIGN_RANGE) {
-				roundIndex[i]++;
-				break;
-			}
-			
-			roundIndex[i] = 0;
-		}		
 	}
 
 }
