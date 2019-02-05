@@ -72,7 +72,6 @@ public class Memory {
 	private int[] playerGuessCols = new int[0];
 	
 	//-- Board
-	private int boardColWith = 0;
 	private int boardRows = BOARD_ROWS;
 	private int boardMaxRowElements = 0;
 	private int boardMaxElements = 0;
@@ -81,6 +80,7 @@ public class Memory {
 	private final Scanner input = new Scanner(System.in);
 	private int boardViewRowWith = 0;
 	private int boardCardValueWith = 0;
+	private int boardColWith = 0;
 	private String boardViewCardShadowValue = "";
 	private String boardLastSelectedCard = null;
 	private boolean boardLastSelectedMatched = false;
@@ -765,11 +765,7 @@ public class Memory {
 		boardLastSelectedMatched = true;
 	}
 
-	
-	
-	// Controller
-
-	private void gameInitBoardCardValueWith( final String[][] board) {
+	private void viewInitBoardCardValueWith( final String[][] board) {
 		
 		int maxColWith = 0;
 		
@@ -790,9 +786,13 @@ public class Memory {
 		this.boardCardValueWith = maxColWith;		
 	}
 	
-	private void gameInitBoardColWith(int cardValueWith) {
+	private void viewInitBoardColWith(int cardValueWith) {
 		this.boardColWith = cardValueWith + (COL_FILLER.length() *2);
 	}
+
+	
+	
+	// Controller
 	
 	private void initBoardMaxRowElements( final String[][] board) {
 				
@@ -822,16 +822,10 @@ public class Memory {
 	}
 	
 	private void initBoardDimensions( final String[][] board) {
-		gameInitBoardCardValueWith(board);
+		viewInitBoardCardValueWith(board);
 		initBoardMaxRowElements(board);
-		gameInitBoardColWith(this.boardCardValueWith);		
+		viewInitBoardColWith(this.boardCardValueWith);		
 	}
-	
-	
-	
-	
-	
-	//Controller
 	
 	private CONTROL_CODE isInBoardRange(final int row, final int col) {
 		
