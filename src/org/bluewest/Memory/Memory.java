@@ -40,6 +40,7 @@ public class Memory {
 	private static enum VIEW_CONTROL_CODE {
 		OK,
 		QUIT,
+		CANCLE,
 		PLAY,
 		ERR_INPUT_NOT_INT
 	}
@@ -349,7 +350,6 @@ public class Memory {
 		while(!input.hasNextInt()) {
 			draw("Invalid Input: " + input.next());draw(LINE_END);
 			draw("Please type a number: ");
-			
 		}
 		
 		return input.nextInt();
@@ -370,7 +370,7 @@ public class Memory {
 
 	private void drawMainAskPlayers() {
 		
-		draw("Set player names, (e)xit when finished:");
+		draw("Type player names, (a).i. for Computer and (e)xit when finished:");
 		draw(LINE_END);
 		draw(LINE_END);
 		
@@ -379,19 +379,55 @@ public class Memory {
 		
 		while(initPlayer) {
 			
-			final String input = drawReadString("Player " + playerNumber + ": ");
+			String input = drawReadString("Player " + playerNumber + ": ");
 			
 			if(drawGameAskYesNo(viewIsExit(input), "Do you really want to exit? (y/n)")){
 				initPlayer = false;
 				continue;
 			}
 			
-			if(playerNumber >= playerNames.length) {
-				playerNames = Arrays.copyOf(playerNames, playerNames.length + 1);
-			}
-			playerNames[playerNumber] = input;
+			if("a".equals(input)) {
+				
+				if(VIEW_CONTROL_CODE.CANCLE == drawMainAskAiPlayer(playerNumber)) {
+					continue;
+				}
+				
+				input = "A.I-" + playerNumber;
+			}			
+			
+			playerNames = engineUtilArrayAddElement(playerNames, input);
+			
 			playerNumber ++;
 		}
+	}
+	
+	private VIEW_CONTROL_CODE drawMainAskAiPlayer(int player) {
+		
+		int strenght = -1;
+		boolean ask = true;
+		
+		while(ask) {
+			strenght = drawReadInt("Please give a.i. strenght. ( 0 - " + GAME_AI_STRENGHT +", the higher the stronger)");
+			
+			if(strenght < 0 || strenght > GAME_AI_STRENGHT) {
+				
+				draw("Ivalid input. Minimum: 0, Maximum: 10 ");
+				draw(LINE_END);
+				
+				if(drawGameAskYesNo(true, "Do you want to exit? (y/n)")){
+					return VIEW_CONTROL_CODE.CANCLE;
+				}
+				
+				continue;
+			}
+			
+			ask = false;
+		}
+		
+		addAiPlayer(player, strenght);
+		
+		return VIEW_CONTROL_CODE.OK;
+		
 	}
 
 	private void drawGameStats() {
@@ -1165,7 +1201,7 @@ public class Memory {
 		return aiPlayerStrenght[player] - 1;
 	}
 	
-	public void addAiPlayer(int player, int strenght) {	
+	public void addAiPlayer(int player, int strenght) {
 		addAiPlayerStrenght(player, strenght);
 	}
 	
