@@ -12,7 +12,7 @@ public class Memory {
 	//- Game
 	private final static int CARD_SIBLINGS = 2;
 	private final static int BOARD_ROWS = 10;
-	private final static boolean SHOW_CARDS = true;
+	private final static boolean SHOW_CARDS = !true;
 	
 	//-- Commands
 	private final static String CS_QUIT = "q";
@@ -964,11 +964,13 @@ public class Memory {
 		final int[] roundIndex = new int[(int) (cards.length / SIGN_RANGE)];
 		Arrays.fill(roundIndex, -1);
 		
-		for (int i = 0; i < cards.length; i++) {
+		for (int i = 0; i < cards.length;) {
 			engineCardDeckIncrement(roundIndex);
 			final String cardSign = modelGetCardSign(roundIndex);
-			cards[i] = cardSign;
-			cards[++i] = cardSign; 
+			
+			for(int duplicate = 0; duplicate < gameCardSiblings; duplicate++) {
+				cards[i++] = cardSign;
+			}
 		}
 		
 		return cards;
@@ -1014,5 +1016,15 @@ public class Memory {
 		
 		return shuffledCards;
 	}
+	
+	
+	private String[][] ciCardValues = new String[0][];
+	private int[][] ciRows = new int[0][];
+	private int[][] ciCols = new int[0][];
+	
+	
+	private String[] ciValue = new String[0];
+	private int[] ciRow = new int[0];
+	private int[] ciCol = new int[0];
 
 }
