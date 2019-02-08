@@ -13,6 +13,7 @@ public class Memory {
 	private final static int CARD_SIBLINGS = 2;
 	private final static int BOARD_ROWS = 10;
 	private final static boolean SHOW_CARDS = !true;
+	private final static int GAME_AI_STRENGHT = 10;
 	
 	//-- Commands
 	private final static String CS_QUIT = "q";
@@ -1017,14 +1018,286 @@ public class Memory {
 		return shuffledCards;
 	}
 	
+	protected int engineUtilRandGetInt(int border) {
+		return engineRandGen.nextInt(border);
+	}
 	
-	private String[][] ciCardValues = new String[0][];
-	private int[][] ciRows = new int[0][];
-	private int[][] ciCols = new int[0][];
+	protected String[] engineUtilArrayAddElement(String[] values, String value) {
+		final String[] result = Arrays.copyOf(values, values.length+1);
+		result[values.length] = value;
+		return result;
+	}
+
+	protected int[] engineUtilArrayAddElement(int[] values, int value) {
+		final int[] result = Arrays.copyOf(values, values.length+1);
+		result[values.length] = value;
+		return result;
+	}
+
+	protected int[][] engineUtilArrayAddElement(int[][] container, int index) {
+		
+		if(container.length  <= index) {
+			container = Arrays.copyOf(container, index + 1);
+		}
+		
+		if(container[index] == null) {
+			container[index] = new int[0];
+		}
+		
+		return container;
+	}
+
+	protected String[][] engineUtilArrayAddElement(String[][] container, int index) {
+		
+		if(container.length  <= index) {
+			container = Arrays.copyOf(container, index + 1);
+			container[index] = new String[0];
+		}
+		
+		if(container[index] == null) {
+			container[index] = new String[0];
+		}
+		
+		return container;
+	}
+
+	protected String[] engineUtilArrayRemoveByIndex(String[] values, int[] indices) {
+		
+		if(indices.length <= 0) {
+			return values;
+		}
+		
+		final String[] result = new String[values.length - indices.length];
+		
+		for (int i = 0, match = 0; i < values.length && match < indices.length; i++) {
+	
+			if (engineUtilArrayContains(indices, i)) {
+				match++;
+				i++;
+				continue;
+			}
+	
+			result[i - match] = values[i];
+		}
+		
+		return result;
+	}
+
+	protected int[] engineUtilArrayRemoveByIndex(int[] values, int[] indices) {
+		
+		if(indices.length <= 0) {
+			return values;
+		}
+		
+		final int[] result = new int[values.length - indices.length];
+		
+		for (int i = 0, match = 0; i < values.length && match < indices.length; i++) {
+	
+			if (engineUtilArrayContains(indices, i)) {
+				match++;
+				i++;
+				continue;
+			}
+	
+			result[i - match] = values[i];
+		}
+		
+		return result;
+	}
+
+	protected boolean engineUtilArrayContains(int[] values, int value) {
+		
+		for(int i = 0; i < values.length; i++) {
+			
+			if(values[i] == value) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	protected int[] engineUtilArraysGetValueIndeces(int[] values, int value) {
+		
+		int[] valueIndices = new int[0];
+		
+		for(int i = 0; i < values.length; i++) {
+			
+			if( value != values[i]) {
+				continue;
+			}
+			
+			valueIndices = engineUtilArrayAddElement(valueIndices, i);			
+		}
+		
+		return valueIndices;
+	}
+
+	protected int[] engineUtilArraysGetValueIndeces(String[] values, String value) {
+		
+		int[] valueIndices = new int[0];
+		
+		for(int i = 0; i < values.length; i++) {
+			
+			if(!value.equals(values[i])) {
+				continue;
+			}
+			
+			valueIndices = engineUtilArrayAddElement(valueIndices, i);			
+		}
+		
+		return valueIndices;
+	}
+
+	private final static Random engineRandGen = new Random(System.nanoTime());
+	private int[] aiPlayerStrenght = new int[0];
+	private String[][] aiCardValues = new String[0][];
+	private int[][] aiCardRows = new int[0][];
+	private int[][] aiCardCols = new int[0][];
 	
 	
-	private String[] ciValue = new String[0];
-	private int[] ciRow = new int[0];
-	private int[] ciCol = new int[0];
+	protected boolean isAiPlayer(int player) {
+		return (player < aiPlayerStrenght.length) 
+				&& (getAiPlayerStrenght(player) > 0); 
+	}
+	
+	protected int getAiPlayerStrenght(int player) {
+		return aiPlayerStrenght[player] - 1;
+	}
+	
+	public void addAiPlayer(int player, int strenght) {	
+		addAiPlayerStrenght(player, strenght);
+	}
+	
+	private void addAiPlayerStrenght(int player, int strenght) {		
+		
+		if(aiPlayerStrenght.length  <= player) {
+			aiPlayerStrenght = Arrays.copyOf(aiPlayerStrenght, player + 1);
+		}
+		
+		aiPlayerStrenght[player] = strenght + 1;
+	}
+	
+	protected void addAiMoves(int row, int col) {
+		
+		for(int player = 0; player < aiPlayerStrenght.length; player++) {
+			
+			if(!isAiPlayer(player)) {
+				continue;
+			}
+			
+			addAiMove(player, row, col);
+		}
+	}
+	
+	private void addAiMove(int player, int row, int col) {
+		
+		if(!aiDoMove(player)) {
+			return;
+		}
+		
+		final String cardValue = getCol(row, col);
+		
+		
+		if(hasAiMove(player, cardValue, row, col)) {
+			return;
+		}
+		
+		addAiCardValue(player, cardValue);
+		addAiCardRow(player, row);
+		addAiCardCol(player, col);
+	}
+		
+	protected void removeAiMoves(int row, int col) {
+		
+		for(int player = 0; player < aiPlayerStrenght.length; player++) {
+			
+			if(!isAiPlayer(player)) {
+				continue;
+			}
+			
+			removeAiMove(player, row, col);
+		}
+	}
+	
+	private void removeAiMove(int player, int row, int col) {
+		final String cardValue = getCol(row, col);
+		final int[] valueIndeces = getAiCardValues(player, cardValue);		
+		removeAiCardValue(player, valueIndeces);
+		removeAiCardRow(player, valueIndeces);
+		removeAiCardCol(player, valueIndeces);
+	}
+	
+	private boolean hasAiMove(int player, String cardValue, int row, int col) {
+
+		final int[] valueIndeces = getAiCardValues(player, cardValue);
+
+		for (int index = 0; index < valueIndeces.length; index++) {
+			final int aiIndex = valueIndeces[index];
+			final int aiRow = getAiCardRow(player, aiIndex);
+			final int aiCol = getAiCardCol(player, aiIndex);
+
+			if (aiRow == row && aiCol == col) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+	
+	private void addAiCardValue(int player, String cardValue) {
+		aiCardValues = engineUtilArrayAddElement(aiCardValues, player);
+		aiCardValues[player] = engineUtilArrayAddElement(aiCardValues[player], cardValue);
+	}
+	
+	private void addAiCardRow(int player, int row) {
+		aiCardRows = engineUtilArrayAddElement(aiCardRows, player);
+		aiCardRows[player] = engineUtilArrayAddElement(aiCardRows[player], row);		
+	}
+	
+	private int getAiCardRow(int player, int index) {
+		return aiCardRows[player][index];
+	}
+	
+	private void addAiCardCol(int player, int col) {
+		aiCardCols = engineUtilArrayAddElement(aiCardCols, player);
+		aiCardCols[player] = engineUtilArrayAddElement(aiCardCols[player], col);		
+	}
+	
+	private int getAiCardCol(int player, int index) {
+		return aiCardCols[player][index];
+	}
+	
+	private int[] getAiCardValues(int player, String value) {
+		return engineUtilArraysGetValueIndeces(aiCardValues[player], value);
+	}
+	
+	private void removeAiCardValue(int player,  int[] values) {
+		aiCardValues[player] = engineUtilArrayRemoveByIndex(aiCardValues[player], values);		
+	}
+	
+	private void removeAiCardRow(int player, int[] values) {
+		aiCardRows[player] = engineUtilArrayRemoveByIndex(aiCardRows[player], values);		
+	}
+	
+	private void removeAiCardCol(int player, int[] values) {
+		aiCardCols[player] = engineUtilArrayRemoveByIndex(aiCardCols[player], values);		
+	}
+	
+	private boolean aiDoMove(int player) {
+		
+		final int chance = engineUtilRandGetInt(GAME_AI_STRENGHT);
+		final int aiStrenght = getAiPlayerStrenght(player);
+		
+		return !(chance > aiStrenght);
+	}
+	
+	private int[][] aiGetMove(int player){		
+		//TODO: implement logic
+		return null;
+		
+	}
+	
+	
 
 }
