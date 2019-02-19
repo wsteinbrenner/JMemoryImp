@@ -11,7 +11,7 @@ public class Memory {
 	
 	//- Game
 	private final static int CARD_SIBLINGS = 2;
-	private final static int BOARD_ROWS = 10;
+	private final static int BOARD_ROWS = 5;
 	private final static boolean SHOW_CARDS = !true;
 	private final static int GAME_AI_STRENGHT = 10;
 	
@@ -27,13 +27,16 @@ public class Memory {
 		
 	//-- Errors
 	private static enum CONTROL_CODE {
+		START,
 		OK,
 		EXIT,
 		CANCLE,
 		QUIT,
+		MOVE,
 		INFO_CARD_MATCH,
 		INFO_CARD_NOT_MATCH,
 		INFO_GAME_ENDED,
+		ERR_CODE_NOT_FOUND,
 		ERR_VALUE_TOO_SMALL,
 		ERR_ROW_NOT_FOUND,
 		ERR_COL_NOT_FOUND,
@@ -69,6 +72,7 @@ public class Memory {
 	private boolean[][] gameShadowBoard = null;
 	private int gamePlayerInCharge = 0;
 	private CONTROL_CODE gameControlCode = CONTROL_CODE.OK;
+	private String gameControlCodeMessage = "";
 	
 	//-- Player
 	private String[] playerNames = new String[0];
@@ -91,13 +95,13 @@ public class Memory {
 
 	public static void main(String[] args) {
 		final Memory game = new Memory();
-		game.viewGameInit();
+		game.viewInitGame();
 		game.engineGameStart();
 	}	
 	
 	// Modell
 	
-	public CONTROL_CODE setBoardRows(int amount) {
+	public CONTROL_CODE modelEngineSetBoardRows(int amount) {
 		
 		if(amount < 1) {
 			return CONTROL_CODE.ERR_VALUE_TOO_SMALL;
@@ -108,7 +112,7 @@ public class Memory {
 		return CONTROL_CODE.OK;
 	}
 	
-	public CONTROL_CODE setGameCardSiblings(int amount) {
+	public CONTROL_CODE modelEngineSetGameCardSiblings(int amount) {
 
 		if(amount < CARD_SIBLINGS) {
 			return CONTROL_CODE.ERR_VALUE_TOO_SMALL;
@@ -119,26 +123,26 @@ public class Memory {
 		return CONTROL_CODE.OK;
 	}
 	
-	private void modelInitPlayers(String[] playerNames) {
+	private void modelPlayersInit(String[] playerNames) {
 		this.playerNames = playerNames;
 		playerPoints = new int[playerNames.length];
 	}	
 	
-	private boolean modelGetShadowBoard(int guessIndex) {			
+	private boolean modelShadowBoardGet(int guessIndex) {			
 		int row = playerGuessRows[guessIndex];
 		int col = playerGuessCols[guessIndex];
 		return gameShadowBoard[row][col];
 		
 	}
 
-	private void modelSetShadowBoard(int guessIndex, boolean mask) {
+	private void modelShadowBoardSet(int guessIndex, boolean mask) {
 		
 		int row = playerGuessRows[guessIndex];
 		int col = playerGuessCols[guessIndex];
 		gameShadowBoard[row][col] = mask;
 	}
 
-	private CONTROL_CODE modelSetShadowBoard(int row, int col, boolean mask) {
+	private CONTROL_CODE modelShadowBoardSetCol(int row, int col, boolean mask) {
 		
 		CONTROL_CODE codeCheck = engineIsInBoardRange(row, col);
 		
@@ -151,11 +155,11 @@ public class Memory {
 		return CONTROL_CODE.OK;
 	}
 
-	private CONTROL_CODE modelResetShadowBoard(int[] row, int[] col) {
+	private CONTROL_CODE modelShadowBoardReset(int[] row, int[] col) {
 		
 		for(int i = 0; i < row.length; i++) {
 			
-			final CONTROL_CODE code = modelSetShadowBoard(row[i], col[i], !SHOW_CARDS);
+			final CONTROL_CODE code = modelShadowBoardSetCol(row[i], col[i], !SHOW_CARDS);
 			
 			if(code != CONTROL_CODE.OK) {
 				return code;
@@ -165,7 +169,7 @@ public class Memory {
 		return CONTROL_CODE.OK;
 	}
 
-	private String modelGetCardSign(int[] roundIndex) {
+	private String modelCardGetSign(int[] roundIndex) {
 		
 		String cardSign = "";
 		
@@ -181,11 +185,19 @@ public class Memory {
 		return cardSign;
 	}
 
-	private String modelGetGuess(int guessNumber) {
-		return gameBoard[playerGuessRows[guessNumber]][playerGuessCols[guessNumber]];
+	private String modelPlayerGuessGetCardValue(int guessNumber) {
+		return modelGameBoardGetCol(modelPlayerGuessGetRow(guessNumber), modelPlayerGuessGetCol(guessNumber));
+	}
+	
+	private int modelPlayerGuessGetRow(int guessNumber) {
+		return playerGuessRows[guessNumber];
+	}
+	
+	private int modelPlayerGuessGetCol(int guessNumber) {
+		return playerGuessCols[guessNumber];
 	}
 
-	private CONTROL_CODE setCol(String value, final int row, final int col) {
+	private CONTROL_CODE modelGameBoardSetCol(String value, final int row, final int col) {
 		
 		final CONTROL_CODE check = engineIsInBoardRange(row, col);
 		
@@ -196,11 +208,11 @@ public class Memory {
 		return check;
 	}
 
-	private String getCol(final int row, final int col) {
+	private String modelGameBoardGetCol(final int row, final int col) {
 		return gameBoard[row][col];
 	}
 
-	public int[] getPlayerHighPoint() {
+	public int[] enginePlayersGetWinners() {
 		
 		int[] playersHighPoint = new int[playerPoints.length];
 		Arrays.fill(playersHighPoint, -1);
@@ -226,7 +238,7 @@ public class Memory {
 		return playersHighPoint;
 	}
 
-	private int getGameCardsRevealed() {
+	private int engineGetGameCardsRevealed() {
 		
 		int sum = 0;
 		
@@ -240,7 +252,7 @@ public class Memory {
 	
 	//View
 
-	public void viewGameInit() {
+	public void viewInitGame() {
 		drawMainWelcome();
 		drawMainConfigure();
 		drawMainAskConfiguration();		
@@ -248,12 +260,12 @@ public class Memory {
 		drawMainAskPlayers();
 	}
 	
-	private void viewInitBoardView() {
+	private void viewInitGameBoard() {
 		viewInitBoardViewCardShadowValue(this.boardViewCardValueWith);
-		viewInitBoardViewRowWith(boardMaxRowElements, boardViewColWith);
+		viewInitGameBoardRowWith(boardMaxRowElements, boardViewColWith);
 	}
 
-	private void viewInitBoardViewRowWith(int rowElements, int colWith) {
+	private void viewInitGameBoardRowWith(int rowElements, int colWith) {
 		this.boardViewRowWith = (boardMaxRowElements * ROW_SIGN.length() * (boardViewColWith + COL_SIGN.length())) + COL_SIGN.length();
 	}
 
@@ -263,7 +275,7 @@ public class Memory {
 		}
 	}
 
-	private void viewInitBoardCardValueWith( final String[][] board) {
+	private void viewInitBoardViewCardValueWith( final String[][] board) {
 		
 		int maxColWith = 0;
 		
@@ -284,13 +296,34 @@ public class Memory {
 		this.boardViewCardValueWith = maxColWith;		
 	}
 
-	private void viewInitBoardColWith(int cardValueWith) {
+	private void viewInitBoardViewColWith(int cardValueWith) {
 		this.boardViewColWith = cardValueWith + (COL_FILLER.length() *2);
 	}
 	
-	protected void engineUpdateView() {
-		drawGameStats();
-		drawPlayerInCharge(gamePlayerInCharge);
+	protected void viewUpdateControlCodeListener(CONTROL_CODE code) {
+		
+		drawMainControlMessage(code);
+		
+		switch (code) {
+		case QUIT:
+			drawGameFinished();
+			break;
+		case OK:
+		case CANCLE:
+			drawGameStats();
+			drawPlayerInCharge(modelEnginePlayerInChargeGet());			
+			break;
+		default:
+			break;
+		}		
+	}
+	
+	private void engineGameControlCodeUpdateCallback(CONTROL_CODE code) {
+		viewUpdateControlCodeListener(code);
+	}
+	
+	private CONTROL_CODE engineGameControlCodeGet() {
+		return gameControlCode;
 	}
 	
 	private void viewHandleEngineCode(CONTROL_CODE code) {
@@ -529,7 +562,7 @@ public class Memory {
 		draw(colValue);
 	}
 	
-	private void drawCards(String[] cards) {		
+	public void debugDrawCards(String[] cards) {		
 		for(String card : cards) {
 			draw(card);
 			draw(COL_SIGN);
@@ -587,12 +620,17 @@ public class Memory {
 	}
 
 	private void drawMainControlMessage(CONTROL_CODE code) {
-		drawMainControlMessage(code, "");
+		drawMainControlMessage(code, engineControlCodeMessageGet());
 	}
 
 	private void drawMainControlMessage(CONTROL_CODE code, String text) {
 		
 		switch (code) {
+		case START:
+			draw("Game startet"); draw(LINE_END);
+			drawGameBoard();
+			drawPlayerInCharge(modelEnginePlayerInChargeGet());
+			break;
 		case OK:
 			draw("O.K. "); draw(LINE_END);
 			break;
@@ -601,13 +639,24 @@ public class Memory {
 			break;
 		case QUIT:
 			draw("User requestet quit. "); draw(LINE_END);
-			drawGameFinished();
+			break;
+		case MOVE:
+			draw("Reveal Card ");drawNotEmpty(text); draw(LINE_END);
+			break;
+		case CANCLE:
+			draw("Player ");drawNotEmpty(text); draw(" Canceld"); draw(LINE_END);
+			break;
+		case INFO_GAME_ENDED:
+			draw("Game ended"); draw(LINE_END);
 			break;
 		case INFO_CARD_MATCH:
 			draw("Congratulation, you found a match!");
 			break;
 		case INFO_CARD_NOT_MATCH:
 			drawGameHint("Sorry, no match  (Enter to Continue)");
+			break;
+		case ERR_CODE_NOT_FOUND:
+			draw("The passed control code could not be handled. ");drawNotEmpty(text); draw(LINE_END);
 			break;
 		case ERR_VALUE_TOO_SMALL:
 			draw("Value too small. ");drawNotEmpty(text); draw(LINE_END);
@@ -620,13 +669,10 @@ public class Memory {
 			break;
 		case ERR_CARD_IS_REVEALED:
 			draw("The card has allready been revealed. ");drawNotEmpty(text); draw(LINE_END);
-			break;
-	
+			break;	
 		default:
 			draw("Err: Control Code not found: " + code); draw(LINE_END);
-		}
-		
-		
+		}		
 	}
 
 	private void drawMainAskConfiguration() {
@@ -644,12 +690,12 @@ public class Memory {
 			switch (input) {
 			case "r":
 			case "rows":
-				code = setBoardRows(drawReadInt("Amount of rows (Default: " + BOARD_ROWS + "): "));
+				code = modelEngineSetBoardRows(drawReadInt("Amount of rows (Default: " + BOARD_ROWS + "): "));
 				message = "Row value has to be greater 0";
 				break;
 			case "c":
 			case "card":
-				code = setGameCardSiblings(drawReadInt("Amount of card siblings (Default: " + CARD_SIBLINGS + "): "));
+				code = modelEngineSetGameCardSiblings(drawReadInt("Amount of card siblings (Default: " + CARD_SIBLINGS + "): "));
 				message = "Sibling value has to be greater than " + (CARD_SIBLINGS - 1) ;
 				break;
 			case CS_EXIT:
@@ -718,8 +764,6 @@ public class Memory {
 
 	private void drawAskPlayersGuess(int guess) {
 		
-		//TODO: Split to a worker and a service method
-		
 		CONTROL_CODE code = CONTROL_CODE.OK;
 		
 		int row = 0;
@@ -739,26 +783,9 @@ public class Memory {
 		} while (CONTROL_CODE.OK != code);		
 	}
 
-	private CONTROL_CODE drawMoveResult(CONTROL_CODE code) {
-		
-		if(CONTROL_CODE.INFO_CARD_MATCH == code) {
-			draw("Congratulation, you found a match!");
-			return CONTROL_CODE.OK;
-		} 
-	
-		if (CONTROL_CODE.INFO_CARD_NOT_MATCH == code) {
-			drawGameHint("Sorry, no match  (Enter to Continue)");
-			return CONTROL_CODE.OK;
-		} 
-		
-		viewHandleEngineCode(code);
-		
-		return code;
-	}
-
 	private void drawGameFinished() {
 		
-		int[] playersWon = getPlayerHighPoint();
+		int[] playersWon = enginePlayersGetWinners();
 		
 		draw("Congratulation!!");
 		draw(LINE_END);
@@ -775,31 +802,13 @@ public class Memory {
 		
 	}
 	
-	private CONTROL_CODE engineDoPlayersTurn() {
+	private void engineDoPlayersTurn() {
 						
-		if(isAiPlayer(gamePlayerInCharge)) {
-			gameControlCode = engineDoPlayersTurnAi(gamePlayerInCharge);
+		if(isAiPlayer(modelEnginePlayerInChargeGet())) {
+			engineControlCodeUpdate(engineDoPlayersTurnAi(modelEnginePlayerInChargeGet()));
 		} else {
-			gameControlCode = engineDoPlayersTurnView(gamePlayerInCharge);			
-		}
-		
-		if(CONTROL_CODE.OK == gameControlCode) {
-			gameControlCode = engineDoMove(gamePlayerInCharge);
-		}
-		
-		engineUpdateMoveResult(gameControlCode);
-		gameControlCode = engineConvertCardMatchStatus(gameControlCode);
-		
-		return gameControlCode;		
-	}
-	
-	private CONTROL_CODE engineConvertCardMatchStatus(CONTROL_CODE cardMatchCode) {
-		
-		if(CONTROL_CODE.INFO_CARD_MATCH == cardMatchCode || CONTROL_CODE.INFO_CARD_NOT_MATCH == cardMatchCode) {
-			return CONTROL_CODE.OK;
-		}
-		
-		return cardMatchCode;		
+			engineControlCodeUpdate(engineDoPlayersTurnView(modelEnginePlayerInChargeGet()));			
+		}		
 	}
 	
 	private CONTROL_CODE engineDoPlayersTurnAi(int player) {
@@ -809,33 +818,33 @@ public class Memory {
 
 	private CONTROL_CODE engineDoPlayersTurnView(int player) {
 		
-		final VIEW_CONTROL_CODE command = drawAskGameCommand(); //Not good move one levle up
+		final VIEW_CONTROL_CODE command = drawAskGameCommand();
 		
-		if(drawGameAskQuit(command == VIEW_CONTROL_CODE.QUIT)) {
+		if(drawGameAskQuit(command == VIEW_CONTROL_CODE.QUIT)) {			
 			return CONTROL_CODE.QUIT;
 		}
 		
 		drawAskPlayerGuess();
 		
-		return CONTROL_CODE.OK;
+		return CONTROL_CODE.MOVE;
 	}
 
 	private void drawAskPlayerGuess() {
 		
-		playerGuessRows = new int[gameCardSiblings];
-		playerGuessCols = new int[gameCardSiblings];
 		String lastCard = null;
+		
+		//TODO: Functionality has to be moved to engine controller
 		
 		for(int guessIndex = 0; guessIndex < gameCardSiblings; guessIndex++) {
 			
 			do {
-				drawAskPlayersGuess(guessIndex);				
-			} while (viewUtilIsEngineOk(engineDoRevealCard(guessIndex, SHOW_CARDS)));
+				drawAskPlayersGuess(guessIndex);
+				engineDoRevealCard(guessIndex, SHOW_CARDS);
+			} while (!modelEngineControlCodeIs(CONTROL_CODE.OK));
 			
-			engineDoRevealCard(guessIndex, SHOW_CARDS);
 			drawGameBoard();
 			
-			final String card = modelGetGuess(guessIndex);
+			final String card = modelPlayerGuessGetCardValue(guessIndex);
 			
 			if(!engineDoCardsMatch(lastCard, card)) {
 				return;
@@ -843,7 +852,12 @@ public class Memory {
 			
 			lastCard = card;			
 		}
-	}	
+	}
+	
+	private void modelPlayerGuessReset() {
+		playerGuessRows = new int[gameCardSiblings];
+		playerGuessCols = new int[gameCardSiblings];
+	}
 	
 	// Controller
 	
@@ -875,9 +889,9 @@ public class Memory {
 	}
 	
 	private void engineInitBoardDimensions( final String[][] board) {
-		viewInitBoardCardValueWith(board);
+		viewInitBoardViewCardValueWith(board);
 		engineInitBoardMaxRowElements(board);
-		viewInitBoardColWith(this.boardViewCardValueWith);		
+		viewInitBoardViewColWith(this.boardViewCardValueWith);		
 	}
 	
 	private CONTROL_CODE engineIsInBoardRange(final int row, final int col) {
@@ -897,7 +911,7 @@ public class Memory {
 	private void engineInitBoard(int boardWith) {
 		engineInitBoards(boardWith);		
 		engineInitBoardDimensions(this.gameBoard);
-		viewInitBoardView();
+		viewInitGameBoard();
 	}
 
 	private void engineInitGame(int boardWith) {
@@ -917,93 +931,148 @@ public class Memory {
 		for(int row = 0, card = 0; row < gameBoard.length; row ++) {
 			
 			for(int col = 0; col < gameBoard[row].length; col++, card++) {
-				gameBoard[row][col] = cards[card];
-				gameShadowBoard[row][col] = !SHOW_CARDS;
+				modelGameBoardSetCol(cards[card], row, col);
+				modelShadowBoardSetCol(row, col, !SHOW_CARDS);
 			}
 		}
 	}
 
 	
 	
-	public CONTROL_CODE engineGameStart() {
+	public CONTROL_CODE engineGameStart() {		
 		
-		
-		modelInitPlayers(this.playerNames);
+		modelPlayersInit(this.playerNames);
 		engineInitGame(this.boardRows);
 		
 		boolean run = true;
+		engineControlCodeUpdate(CONTROL_CODE.START);
 		
 		while(run) {
-
-			engineUpdateView();
-			gameControlCode = engineDoPlayersTurn();
 			
-			switch (gameControlCode) {
+			engineFinishGame();
+			
+			switch (engineGameControlCodeGet()) {
+
+			case START:
+			case OK:
+				modelPlayerGuessReset();
+				engineDoPlayersTurn();
+				break;
+			case INFO_GAME_ENDED:
 			case QUIT:
 				run = false;
 				break;
-			case OK:
-			case CANCLE:				
-				gamePlayerInCharge++;
-			default:
-				if(engineIsGameFinished()) {
-					run = false;
-					gameControlCode = CONTROL_CODE.INFO_GAME_ENDED;
-				}
+			case MOVE:
+				engineDoMove(modelEnginePlayerInChargeGet());
+				break;			
+			case INFO_CARD_MATCH:
+				modelPlayerPointsIncrease(modelEnginePlayerInChargeGet());
+				engineControlCodeUpdate(CONTROL_CODE.OK);
 				break;
-			}
+				
+			case CANCLE:
+			case INFO_CARD_NOT_MATCH:
+				modelEnginePlayerInChargeIncrease();
+				engineControlCodeUpdate(CONTROL_CODE.OK);
+				break;
 			
-			engineUpdateControlCode(gameControlCode);			
+			default:
+				engineControlCodeUpdate(CONTROL_CODE.ERR_CODE_NOT_FOUND, engineGameControlCodeGet().name());
+				engineControlCodeUpdate(CONTROL_CODE.QUIT);
+				continue;
+			}
 		}
 		
 		return gameControlCode;	
 	}
 	
-	private CONTROL_CODE engineUpdateMoveResult(CONTROL_CODE code) {
-		return drawMoveResult(code);
+	private void modelEnginePlayerInChargeIncrease() {
+						
+		if(++gamePlayerInCharge >= playerNames.length) {
+			gamePlayerInCharge = 0;
+		}
 		
+	}
+	
+	private int modelEnginePlayerInChargeGet() {
+		return gamePlayerInCharge;
+	}
+	
+	private boolean engineFinishGame() {
+		
+		if(engineIsGameFinished()) {
+			engineControlCodeUpdate(CONTROL_CODE.INFO_GAME_ENDED);
+			return true;
+		}
+		
+		return false;
 	}
 	
 	private boolean engineIsGameFinished() {
 		return enginGetGameCardsLeft() <= 0;
 	}
 	
-	private void engineUpdateControlCode(CONTROL_CODE code) {
-		gameControlCode = code;
-		viewHandleEngineCode(code);
+	protected String engineControlCodeMessageGet() {
+		return gameControlCodeMessage;
 	}
 	
-	public CONTROL_CODE engineDoMove(int player) {
+	protected CONTROL_CODE engineControlCodeGet() {
+		return gameControlCode;
+	}
+	
+	protected void engineControlCodeUpdate(CONTROL_CODE code) {
+		engineControlCodeUpdate(code, "");
+	}
+	
+	protected void engineControlCodeUpdate(CONTROL_CODE code, String text) {
+		gameControlCode = code;
+		gameControlCodeMessage = text;
+		engineGameControlCodeUpdateCallback(code);
+	}
+	
+	public void engineDoMove(int player) {
 		
-		modelResetShadowBoard(playerGuessRows, playerGuessCols);
+		modelShadowBoardReset(playerGuessRows, playerGuessCols);
 		
-		CONTROL_CODE check = engineCheckGuess();
-		if(check == CONTROL_CODE.INFO_CARD_NOT_MATCH) {
-			return check;
+		engineControlCodeUpdate(engineCheckGuess());
+		
+		if(modelEngineControlCodeIs(CONTROL_CODE.INFO_CARD_NOT_MATCH)) {
+			return;
 		}
 		
-		check = engineDoMove();
-		if(check != CONTROL_CODE.OK) {
-			return check;
+		engineDoMove();
+		
+		if(!modelEngineControlCodeIs(CONTROL_CODE.OK)) {
+			return;
 		}
 		
-		playerPoints[player]++;
-		
-		return CONTROL_CODE.INFO_CARD_MATCH;
+		modelPlayerPointsIncrease(player);
+	}
+	
+	private boolean modelEngineControlCodeIs(CONTROL_CODE code) {
+		return gameControlCode == code;
+	}
+	
+	
+	private int[] modelPlayerPointsGet(int player) {
+		playerPoints = engineUtilArrayAddElement(playerPoints, player);
+		return playerPoints;
+	}
+	
+	private void modelPlayerPointsIncrease(int player) {
+		modelPlayerPointsGet(player)[player]++;
 	}
 
-	protected CONTROL_CODE engineDoMove() {
+	protected void engineDoMove() {
 	
 		for (int guess = 0; guess < CARD_SIBLINGS; guess++) {
 			
-			final CONTROL_CODE code = engineDoRevealCard(guess, SHOW_CARDS);
+			engineDoRevealCard(guess, SHOW_CARDS);
 	
-			if (code != CONTROL_CODE.OK) {
-				return code;
+			if (!modelEngineControlCodeIs(CONTROL_CODE.OK)) {
+				return;
 			}
 		}
-		
-		return CONTROL_CODE.OK;
 	}
 
 	protected CONTROL_CODE engineCheckGuess() {
@@ -1014,7 +1083,7 @@ public class Memory {
 	
 			int row = playerGuessRows[guess];
 			int col = playerGuessCols[guess];
-			final String card = getCol(row, col);
+			final String card = modelGameBoardGetCol(row, col);
 	
 			if (!engineDoCardsMatch(lastCard, card)) {
 				return CONTROL_CODE.INFO_CARD_NOT_MATCH;
@@ -1029,16 +1098,16 @@ public class Memory {
 		
 	}
 
-	protected CONTROL_CODE engineDoRevealCard(int guessIndex, boolean mask) {
+	protected void engineDoRevealCard(int guessIndex, boolean mask) {
 		
-		if(mask == modelGetShadowBoard(guessIndex)) {
-			return CONTROL_CODE.ERR_CARD_IS_REVEALED;
+		if(mask == modelShadowBoardGet(guessIndex)) {
+			engineControlCodeUpdate(CONTROL_CODE.ERR_CARD_IS_REVEALED);
+			return;
 		}
 		
-		modelSetShadowBoard(guessIndex, mask);
+		modelShadowBoardSet(guessIndex, mask);
 		engineUpdateCardRevealed(guessIndex);
-		
-		return CONTROL_CODE.OK;		
+		engineControlCodeUpdate(CONTROL_CODE.OK);	
 	}
 	
 	private void engineUpdateCardRevealed(int guessIndex) {
@@ -1080,7 +1149,7 @@ public class Memory {
 		
 
 	private int enginGetGameCardsLeft() {
-		return boardMaxElements - getGameCardsRevealed();
+		return boardMaxElements - engineGetGameCardsRevealed();
 	}
 
 	private String[] engineGetCardDeck(String[][] board) {	
@@ -1090,7 +1159,7 @@ public class Memory {
 		
 		for (int i = 0; i < cards.length;) {
 			engineCardDeckIncrement(roundIndex);
-			final String cardSign = modelGetCardSign(roundIndex);
+			final String cardSign = modelCardGetSign(roundIndex);
 			
 			for(int duplicate = 0; duplicate < gameCardSiblings; duplicate++) {
 				cards[i++] = cardSign;
@@ -1281,7 +1350,7 @@ public class Memory {
 	
 	protected boolean isAiPlayer(int player) {
 		return (player < aiPlayerStrenght.length) 
-				&& (getAiPlayerStrenght(player) > 0); 
+				&& (getAiPlayerStrenght(player) >= 0); 
 	}
 	
 	protected int getAiPlayerStrenght(int player) {
@@ -1323,7 +1392,7 @@ public class Memory {
 			return;
 		}
 		
-		final String cardValue = getCol(row, col);
+		final String cardValue = modelGameBoardGetCol(row, col);
 		
 		
 		if(hasAiMove(player, cardValue, row, col)) {
@@ -1354,7 +1423,7 @@ public class Memory {
 	}
 	
 	private void removeAiMove(int player, int row, int col) {
-		final String cardValue = getCol(row, col);
+		final String cardValue = modelGameBoardGetCol(row, col);
 		final int[] valueIndeces = getAiCardValues(player, cardValue);		
 		removeAiCardValue(player, valueIndeces);
 		removeAiCardRow(player, valueIndeces);
