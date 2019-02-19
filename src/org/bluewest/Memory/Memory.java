@@ -71,6 +71,7 @@ public class Memory {
 	private String[][] gameBoard = null;
 	private boolean[][] gameShadowBoard = null;
 	private int gamePlayerInCharge = 0;
+	private int gamePlayerTurn = 0;
 	private CONTROL_CODE gameControlCode = CONTROL_CODE.OK;
 	private String gameControlCodeMessage = "";
 	
@@ -996,6 +997,27 @@ public class Memory {
 	
 	private int modelEnginePlayerInChargeGet() {
 		return gamePlayerInCharge;
+	}
+	
+	private int modelEnginePlayerTurnGet() {
+		return this.gamePlayerTurn;
+	}
+	
+	private void modelEnginePlayerTurnSet(int turn) {
+		
+		if(turn < gameCardSiblings) {
+			this.gamePlayerTurn = turn;
+			return;
+		}
+		
+		turn = gameCardSiblings - 1; //TODO: add a warning
+		
+	}
+	
+	private void modelEnginePlayerTurnIncrease() {
+		if (gamePlayerTurn++ >= gameCardSiblings) {
+			gamePlayerTurn = 0;
+		}
 	}
 	
 	private boolean engineFinishGame() {
